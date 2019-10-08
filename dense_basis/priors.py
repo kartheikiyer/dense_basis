@@ -27,9 +27,9 @@ sfr_prior_statement = 'The prior on log SFR_inst is uniform from %.1f to %.1f' %
 alpha = 3.0 # dirichlet concentration parameter
 tx_prior = lambda Nparam, alpha: np.cumsum(np.sort(np.random.dirichlet(np.ones((Nparam+1,))*alpha)))[0:-1]
 
-# redshift - uniform prior for now
-z_min = 0.5
-z_max = 3.0
+# redshift - uniform prior for now - testing around z~1 for now.
+z_min = 0.9
+z_max = 1.1
 z_prior = lambda : np.random.uniform()*(z_max-z_min) + z_min
 z_prior_statement = 'The prior on redshift is uniform from %.1f to %.1f' %(z_min, z_max)
 
