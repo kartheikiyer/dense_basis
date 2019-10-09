@@ -221,7 +221,7 @@ def calc_fnu_sed_fast(fnuspec,filcurves):
 #                         Pre-grid generation
 #-----------------------------------------------------------------------
 
-def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = False, filter_list = 'filter_list.dat', z_step = 0.01, sp = mocksp, cosmology = cosmo):
+def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = False, filter_list = 'filter_list.dat', norm_method = 'max', z_step = 0.01, sp = mocksp, cosmology = cosmo):
 
     """Generate a pregrid of galaxy properties and their corresponding SEDs
         drawn from the prior distributions defined in priors.py
@@ -234,9 +234,8 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
             filter_list[filename]: File that contains a list of filter curves.
             z_step[float]: Step size in redshift for filter curve grid.
                 Default is 0.01.
-            filcurves[2d array, (len(spec), Nfilters)]: filter transmission curves splined to wavelength array. Generated using the make_filvalkit_simple function.
-            igmval[float, optional]: Include IGM absorption (Default is True)
-            return_lam[boolean, optional]: Return a wavelength array along with the spectrum (Default is True)
+            norm_method[string, default = 'none']: normalization for SEDs and SFHs.
+                Currently supported arguments are 'none', 'max', 'median', 'area'.
             sp[stellar population object]: FSPS stellar population object. Initialized previously for speed.
             cosmo[astropy cosmology object]: cosmology. Default is FlatLambdaCDM
         Returns:
@@ -246,6 +245,7 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
             rand_Av: prior-sampled dust attenuation values
             rand_z: prior-sampled redshift values
             rand_seds: Corresponding SEDs in F_\nu (\muJy)
+            norm_method: Argument for how SEDs are normalized, pass into fitter
         """
 
     rand_sfh_tuple, rand_Z, rand_Av, rand_z = sample_all_params(random_seed = initial_seed, Nparam = Nparam)
@@ -273,9 +273,43 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
         fc_index = np.argmin(np.abs(rand_z[i] - fc_zgrid))
         rand_seds[0:,i] = make_sed_fast(rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i], fcs[0:,0:,fc_index], sp = mocksp, cosmology = cosmo)
 
+
+    for i in (range(N_pregrid)):
+        if norm_method == 'none':
+            # no normalization
+            norm_fac = 1
+        elif norm_method == 'max':
+            # normalize SEDs to 1 - seems to work better than median for small grids
+            norm_fac = np.amax(rand_seds[0:,i])
+        elif norm_method == 'median':
+            # normalize SEDs to median
+            norm_fac = np.median(rand_seds[0:,i])
+        elif norm_method == 'area':
+            # normalize SFH to 10^9 Msun
+            norm_fac == 10**(rand_sfh_tuples[0,i] - 9)
+        else:
+            raise ValueError('undefined normalization argument')
+        rand_sfh_tuples[0,i] = rand_sfh_tuples[0,i] - np.log10(norm_fac)
+        rand_sfh_tuples[1,i] = rand_sfh_tuples[1,i] - np.log10(norm_fac)
+        rand_seds[0:,i] = rand_seds[0:,i]/norm_fac
+
     if store == True:
-        pregrid_mdict = {'rand_sfh_tuples':rand_sfh_tuples, 'rand_Z':rand_Z, 'rand_Av':rand_Av, 'rand_z':rand_z, 'rand_seds':rand_seds}
+        pregrid_mdict = {'rand_sfh_tuples':rand_sfh_tuples, 'rand_Z':rand_Z, 'rand_Av':rand_Av, 'rand_z':rand_z, 'rand_seds':rand_seds, 'norm_method':norm_method}
         sio.savemat('dense_basis/pregrids/sfh_pregrid_size_'+str(N_pregrid)+'.mat', mdict = pregrid_mdict)
         return
 
-    return rand_sfh_tuples, rand_Z, rand_Av, rand_z, rand_seds
+    return rand_sfh_tuples, rand_Z, rand_Av, rand_z, rand_seds, norm_method
+
+
+def load_pregrid_sednorm(fname):
+    # free SED normalization for easy mass and SFR fits
+
+    cat = sio.loadmat(fname)
+    sfh_tuples = cat['rand_sfh_tuples']
+    Av = cat['rand_Av'].ravel()
+    Z = cat['rand_Z'].ravel()
+    z = cat['rand_z'].ravel()
+    seds = cat['rand_seds']
+    norm_method = cat['norm_method']
+
+    return sfh_tuples, Z, Av, z, seds, norm_method
