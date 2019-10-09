@@ -74,11 +74,11 @@ def fit_sed_pregrid(sed, sed_err, pg_theta, fit_mask = [True], norm_method = 'no
             plt.subplot(1,5,5);tempy = plt.ylim();plt.plot([truths[4],truths[4]],tempy,'k--', lw=3)
         plt.show()
 
-    if return_val = 'chi2':
+    if return_val == 'chi2':
         return chi2
-    elif return_val = 'params':
+    elif return_val == 'params':
         return calculate_50_16_84_params(chi2, len(sed), np.vstack([pg_sfhs, pg_Av, pg_Z, pg_z]), norm_fac)
-    elif return_Val = 'posteriors':
+    elif return_Val == 'posteriors':
         return calculate_50_16_84_params(chi2, len(sed), np.vstack([pg_sfhs, pg_Av, pg_Z, pg_z]), norm_fac, return_posterior = True)
     else:
         raise ValueError('Undefined return request. Use chi2, params or posteriors.')
