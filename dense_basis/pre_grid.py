@@ -267,6 +267,7 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
     rand_Av = np.zeros((N_pregrid,))
     rand_z = np.zeros((N_pregrid,))
     rand_seds = np.zeros((fcs.shape[1],N_pregrid))
+    rand_norm_facs = np.zeros((N_pregrid,))
 
     for i in tqdm(range(N_pregrid)):
         rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i] = sample_all_params(random_seed = initial_seed+i*7, Nparam = Nparam)
@@ -292,9 +293,10 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
         rand_sfh_tuples[0,i] = rand_sfh_tuples[0,i] - np.log10(norm_fac)
         rand_sfh_tuples[1,i] = rand_sfh_tuples[1,i] - np.log10(norm_fac)
         rand_seds[0:,i] = rand_seds[0:,i]/norm_fac
+        rand_norm_facs[i] = norm_fac
 
     if store == True:
-        pregrid_mdict = {'rand_sfh_tuples':rand_sfh_tuples, 'rand_Z':rand_Z, 'rand_Av':rand_Av, 'rand_z':rand_z, 'rand_seds':rand_seds, 'norm_method':norm_method}
+        pregrid_mdict = {'rand_sfh_tuples':rand_sfh_tuples, 'rand_Z':rand_Z, 'rand_Av':rand_Av, 'rand_z':rand_z, 'rand_seds':rand_seds, 'norm_method':norm_method, 'rand_norm_facs':rand_norm_facs}
         sio.savemat('dense_basis/pregrids/sfh_pregrid_size_'+str(N_pregrid)+'.mat', mdict = pregrid_mdict)
         return
 
