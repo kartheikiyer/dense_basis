@@ -25,7 +25,8 @@ sfr_prior_statement = 'The prior on log SFR_inst is uniform from %.1f to %.1f' %
 
 # tx - dirichlet priors
 alpha = 3.0 # dirichlet concentration parameter
-tx_prior = lambda Nparam, alpha: np.cumsum(np.sort(np.random.dirichlet(np.ones((Nparam+1,))*alpha)))[0:-1]
+#tx_prior = lambda Nparam, alpha: np.cumsum(np.sort(np.random.dirichlet(np.ones((Nparam+1,))*alpha)))[0:-1]
+tx_prior = lambda Nparam, alpha: np.cumsum(np.random.dirichlet(np.ones((Nparam+1,))*alpha))[0:-1]
 
 # redshift - uniform prior for now - testing around z~1 for now.
 z_min = 0.9
@@ -70,9 +71,19 @@ def sample_all_params(random_seed = np.random.randint(1), Nparam = 3, alpha = 5.
     sfh_tuple = np.zeros((Nparam + 3,))
     sfh_tuple[0] = mass_prior()
     sfh_tuple[1] = sfr_prior()
+    # if sfh_tuple[0]-sfh_tuple[1] < 8.2: # max sSFR cut for george GP to work
+    #     sfh_tuple[1] = sfh_tuple[0]-8.2
     sfh_tuple[2] = Nparam
     sfh_tuple[3:] = tx_prior(Nparam, alpha)
     temp_z = z_prior()
     temp_Z = Z_prior()
     temp_Av = Av_prior()
+    return sfh_tuple, temp_Z, temp_Av, temp_z
+
+def sample_all_params_safesSFR(random_seed = np.random.randint(1), Nparam = 3, alpha = 5.0):
+    sfh_tuple, temp_Z, temp_Av, temp_z = sample_all_params(random_seed = random_seed, Nparam = Nparam, alpha = alpha)
+    ctr = np.random.choice(100000)
+    while (sfh_tuple[0] - sfh_tuple[1] < 8.2):
+        sfh_tuple, temp_Z, temp_Av, temp_z = sample_all_params(random_seed = ctr, Nparam = Nparam, alpha = alpha)
+        ctr = ctr + np.random.choice(100000)
     return sfh_tuple, temp_Z, temp_Av, temp_z

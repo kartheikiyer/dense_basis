@@ -57,7 +57,8 @@ def make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = Fals
 
     sp.params['add_igm_absorption'] = igmval
     sp.params['zred'] = zval
-    sfh, timeax = gp_sfh_sklearn(sfh_tuple, zval = zval)
+    sfh, timeax = gp_sfh_george(sfh_tuple, zval = zval)
+    #sfh, timeax = gp_sfh_sklearn(sfh_tuple, zval = zval)
     timeax = timeax/1e9
     sp.params['sfh'] = 3
     sp.set_tabular_sfh(timeax, sfh)
@@ -221,7 +222,7 @@ def calc_fnu_sed_fast(fnuspec,filcurves):
 #                         Pre-grid generation
 #-----------------------------------------------------------------------
 
-def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = False, filter_list = 'filter_list.dat', norm_method = 'max', z_step = 0.01, sp = mocksp, cosmology = cosmo):
+def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = False, filter_list = 'filter_list.dat', norm_method = 'max', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None):
 
     """Generate a pregrid of galaxy properties and their corresponding SEDs
         drawn from the prior distributions defined in priors.py
@@ -248,7 +249,7 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
             norm_method: Argument for how SEDs are normalized, pass into fitter
         """
 
-    rand_sfh_tuple, rand_Z, rand_Av, rand_z = sample_all_params(random_seed = initial_seed, Nparam = Nparam)
+    rand_sfh_tuple, rand_Z, rand_Av, rand_z = sample_all_params_safesSFR(random_seed = initial_seed, Nparam = Nparam)
     _, lam = make_spec(rand_sfh_tuple, rand_Z, rand_Av, rand_z, igmval = True, return_lam = True, sp = mocksp, cosmology = cosmo)
 
     fc_zgrid = np.arange(z_min-z_step, z_max+z_step, z_step)
@@ -270,7 +271,7 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
     rand_norm_facs = np.zeros((N_pregrid,))
 
     for i in tqdm(range(N_pregrid)):
-        rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i] = sample_all_params(random_seed = initial_seed+i*7, Nparam = Nparam)
+        rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i] = sample_all_params_safesSFR(random_seed = initial_seed+i*7, Nparam = Nparam)
         fc_index = np.argmin(np.abs(rand_z[i] - fc_zgrid))
         rand_seds[0:,i] = make_sed_fast(rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i], fcs[0:,0:,fc_index], sp = mocksp, cosmology = cosmo)
 
@@ -297,7 +298,9 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
 
     if store == True:
         pregrid_mdict = {'rand_sfh_tuples':rand_sfh_tuples, 'rand_Z':rand_Z, 'rand_Av':rand_Av, 'rand_z':rand_z, 'rand_seds':rand_seds, 'norm_method':norm_method, 'rand_norm_facs':rand_norm_facs}
-        sio.savemat('dense_basis/pregrids/sfh_pregrid_size_'+str(N_pregrid)+'.mat', mdict = pregrid_mdict)
+        if fname is None:
+            fname = 'sfh_pregrid_size'
+        sio.savemat('dense_basis/pregrids/'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat', mdict = pregrid_mdict)
         return
 
     return rand_sfh_tuples, rand_Z, rand_Av, rand_z, rand_seds, norm_method

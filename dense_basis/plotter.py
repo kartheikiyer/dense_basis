@@ -15,22 +15,25 @@ rcParams['xtick.major.width'] = 3
 rcParams['ytick.major.width'] = 3
 
 def plot_sfh(timeax, sfh, lookback = False,
-logx = False, logy = False):
-    plt.figure(figsize=(12,4))
+logx = False, logy = False, fig = None, label=None):
+    if fig is None:
+        fig = plt.figure(figsize=(12,4))
     if lookback == True:
-        plt.plot(np.amax(timeax)/1e9 - timeax/1e9, sfh)
+        plt.plot(np.amax(timeax)/1e9 - timeax/1e9, sfh, label=label)
         plt.xlabel('lookback time [Gyr]');
     else:
         plt.plot(timeax/1e9, sfh)
         plt.xlabel('cosmic time [Gyr]');
+    if label != None:
+        plt.legend(edgecolor='w')
     plt.ylabel(r'SFR(t) [$M_\odot yr^{-1}$]')
     if logx == True:
         plt.xscale('log')
     if logy == True:
         plt.yscale('log')
     plt.xlim(0,np.amax(timeax/1e9))
-    plt.show()
-    return
+    # plt.show()
+    return fig
 
 def plot_spec(lam, spec, logx = True, logy = True,
 xlim = (1e2,1e8),
