@@ -11,6 +11,10 @@ from .gp_sfh import *
 
 import fsps
 mocksp = fsps.StellarPopulation(compute_vega_mags=False, zcontinuous=1,sfh=0, imf_type=1, logzsol=0.0, dust_type=2, dust2=0.0, add_neb_emission=True)
+
+##
+# Charlotte add code here
+##
 print('Initialized stellar population with FSPS.')
 
 
