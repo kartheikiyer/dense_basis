@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'dense_basis'
+project = 'dense basis'
 copyright = '2019, Kartheik Iyer'
 author = 'Kartheik Iyer'
 
@@ -26,6 +26,8 @@ release = 'v 0.1.2'
 
 
 # -- General configuration ---------------------------------------------------
+
+master_doc = 'index'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
