@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>dense_basis: Getting Started &#8212; dense_basis v 0.1.2 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="dense_basis: SED fitting with smooth nonparametric star formation histories" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <blockquote>
+<div><span class="target" id="module-dense_basis"></span></div></blockquote>
+<div class="section" id="dense-basis-getting-started">
+<h1>dense_basis: Getting Started<a class="headerlink" href="#dense-basis-getting-started" title="Permalink to this headline">¶</a></h1>
+<p>0. Before you start, if you’re fitting photometry, put your photometric filter transmission curves in a folder somewhere and make a list of filter curves inside the filter_curves folder with the paths to each filter. You’ll need to pass this to the code to generate SEDs corresponding to a given parameter set.
+Also check all the numbers within <cite>priors.py</cite> to see if they’re appropriate for your use-case.</p>
+<ol class="arabic">
+<li><p>Import the module, (the initial import takes a few minutes because it’s initializing its FSPS backend. Don’t worry about it) and visualize the set of filter curves used to make SEDs:</p>
+<blockquote>
+<div><p>import dense_basis as db
+filter_list = ‘path/to/filter_list.dat’
+db.plot_filterset(filter_list, z = 1.0)</p>
+</div></blockquote>
+</li>
+<li><p>Generate a template atlas that you will use for fitting. The important arguments here are the size of the atlas (<cite>N_pregrid</cite>), which samples from the overall multidimensional prior distributions, and the number of SFH parameters (<cite>Nparam</cite>). The generated atlas is then stored in the /pregrids folder with the user-specified fname.</p>
+<blockquote>
+<div><p>fname = ‘test_atlas’
+N_pregrid = 10000
+N_param = 3
+db.generate_pregrid(N_pregrid = N_pregrid, Nparam = N_param, store = True, filter_list=filter_list, fname = fname)</p>
+</div></blockquote>
+</li>
+<li><p>To illustrate the SED fitting procedure, let’s generate a mock SFH and its corresponding SED.</p>
+<blockquote>
+<div><p># sample from the prior space to get parameters
+rand_sfh_tuple, rand_Z, rand_Av, rand_z = db.sample_all_params_safesSFR(random_seed = 42, Nparam = N_param)</p>
+<p># generate an SFH corresponding to the SFH-tuple and see how it looks:
+rand_sfh, rand_time = db.gp_sfh_george(rand_sfh_tuple, zval = rand_z)
+fig = db.plot_sfh(rand_time, rand_sfh, lookback=True)
+sfh_truths = [rand_time, rand_sfh]</p>
+<p># generate a corresponding spectrum and multiply by filter curves to get the SED:
+rand_spec, rand_lam = db.make_spec(rand_sfh_tuple, rand_Z, rand_Av, rand_z, return_lam = True)
+obs_sed = db.calc_fnu_sed(rand_spec, rand_z, rand_lam, fkit_name = filter_list)
+obs_err = obs_sed * 0.1 # S/N of 10
+sed_truths = (rand_sfh_tuple[0], rand_sfh_tuple[1], rand_sfh_tuple[-1], rand_Av, rand_Z, rand_z)</p>
+</div></blockquote>
+</li>
+<li><p>Step 2 is extremely beneficial in fitting large datasets, since the atlas needs to be generated only once and can be used for fitting as many SEDs as needed using the brute-force Bayesian approach. Having generated this dataset, now an arbitrary SED (<cite>obs_sed</cite>, and its errors <cite>obs_err</cite>) can be fit using:</p>
+<blockquote>
+<div><p># load the atlas
+pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds, norm_method = db.load_pregrid_sednorm(fname, N_pregrid, N_param)
+pg_theta = [pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds]</p>
+<p># pass the atlas and the observed SED into the fitter, fit params returns the median and 1-sigma values for the parameters being fit
+fit_params = db.fit_sed_pregrid(obs_sed, obs_err, pg_theta, norm_method=norm_method)</p>
+</div></blockquote>
+</li>
+<li><p>If we are intersted in the full posteriors of the fit, this can be visualized by making the fitter return the chi2 array and then computing the full posteriors as prior*likelihood. Let’s see how it compares to the truth:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>chi2_array = db.fit_sed_pregrid(obs_sed, obs_err,</dt><dd><p>pg_theta, return_val = ‘chi2’,
+norm_method=norm_method)</p>
+</dd>
+</dl>
+<p># plot parameter posteriors:
+db.plot_posteriors(chi2_array, pg_theta, truths = sed_truths)</p>
+</div></blockquote>
+</li>
+<li><p>Finally, we can also plot the posterior SFH and see how it compares to the true SFH.</p>
+<blockquote>
+<div><p># plot posterior SFH
+db.plot_SFH_posterior(chi2_array, pg_theta, truths = sfh_truths)</p>
+</div></blockquote>
+</li>
+</ol>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">dense_basis</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">General Usage:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">dense_basis: Getting Started</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">dense_basis: SED fitting with smooth nonparametric star formation histories</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Kartheik Iyer.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/usage/getting_started.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
