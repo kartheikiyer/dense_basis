@@ -13,7 +13,7 @@ import fsps
 mocksp = fsps.StellarPopulation(compute_vega_mags=False, zcontinuous=1,sfh=0, imf_type=1, logzsol=0.0, dust_type=2, dust2=0.0, add_neb_emission=True)
 print('Initialized stellar population with FSPS.')
 
-
+priors = Priors()
 
 #-----------------------------------------------------------------------
 #                     Calculating spectra and SEDs
@@ -34,7 +34,7 @@ def convert_to_microjansky(spec,z,cosmology):
     #temp = spec *1e6 * 1e23*3.48e33/(4*np.pi*3.086e+24*3.086e+24*cosmo.luminosity_distance(z).value*cosmo.luminosity_distance(z).value*(1+z))
     return temp
 
-def make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = False, sp = mocksp, cosmology = cosmo):
+def make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = False, return_ms = False, sp = mocksp, cosmology = cosmo):
 
     """Use FSPS to generate a spectrum corresponding to a set of
         input galaxy properties.
@@ -57,9 +57,8 @@ def make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = Fals
 
     sp.params['add_igm_absorption'] = igmval
     sp.params['zred'] = zval
-    sfh, timeax = gp_sfh_george(sfh_tuple, zval = zval)
-    #sfh, timeax = gp_sfh_sklearn(sfh_tuple, zval = zval)
-    timeax = timeax/1e9
+    sfh, timeax = tuple_to_sfh(sfh_tuple, zval = zval)
+    timeax = timeax
     sp.params['sfh'] = 3
     sp.set_tabular_sfh(timeax, sfh)
     sp.params['cloudy_dust'] = True
@@ -72,7 +71,9 @@ def make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = Fals
 
     # add option to work in energy or F_\lambda as well
 
-    if return_lam == True:
+    if return_ms == True:
+        return spec_ujy, np.log10(sfh[-1]), np.log10(sp.stellar_mass)
+    elif return_lam == True:
         return spec_ujy, lam_arr
     else:
         return spec_ujy
@@ -102,9 +103,9 @@ def make_sed_fast(sfh_tuple, metval, dustval, zval, filcurves, igmval = True, re
             sed[1d numpy array, len = Nfilters]: SED in F_\nu (\muJy)
         """
 
-    spec = make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = False, sp = mocksp, cosmology = cosmo)
+    spec, logsfr, logmstar = make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_ms = True, return_lam = False, sp = mocksp, cosmology = cosmo)
     sed = calc_fnu_sed_fast(spec, filcurves)
-    return sed
+    return sed, logsfr, logmstar
 
 def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_dir = 'dense_basis/filters/'):
 
@@ -216,13 +217,7 @@ def calc_fnu_sed_fast(fnuspec,filcurves):
         filvals[tindex] = np.sum(temp1.T[0:,0]*temp2)/np.sum(filcurves[0:,tindex])
     return filvals
 
-
-
-#-----------------------------------------------------------------------
-#                         Pre-grid generation
-#-----------------------------------------------------------------------
-
-def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = False, filter_list = 'filter_list.dat', norm_method = 'max', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None):
+def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = False, filter_list = 'filter_list.dat', norm_method = 'max', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None):
 
     """Generate a pregrid of galaxy properties and their corresponding SEDs
         drawn from the prior distributions defined in priors.py
@@ -249,12 +244,13 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
             norm_method: Argument for how SEDs are normalized, pass into fitter
         """
 
-    rand_sfh_tuple, rand_Z, rand_Av, rand_z = sample_all_params_safesSFR(random_seed = initial_seed, Nparam = Nparam)
+    Nparam = priors.Nparam
+    rand_sfh_tuple, rand_Z, rand_Av, rand_z = priors.sample_all_params_safesSFR(random_seed = initial_seed)
     _, lam = make_spec(rand_sfh_tuple, rand_Z, rand_Av, rand_z, igmval = True, return_lam = True, sp = mocksp, cosmology = cosmo)
 
-    fc_zgrid = np.arange(z_min-z_step, z_max+z_step, z_step)
+    fc_zgrid = np.arange(priors.z_min-z_step, priors.z_max+z_step, z_step)
 
-    temp_fc, temp_lz, temp_lz_lores = make_filvalkit_simple(lam,z_min,fkit_name = filter_list)
+    temp_fc, temp_lz, temp_lz_lores = make_filvalkit_simple(lam,priors.z_min,fkit_name = filter_list)
 
     fcs= np.zeros((temp_fc.shape[0], temp_fc.shape[1], len(fc_zgrid)))
     lzs = np.zeros((temp_lz.shape[0], len(fc_zgrid)))
@@ -271,10 +267,11 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
     rand_norm_facs = np.zeros((N_pregrid,))
 
     for i in tqdm(range(N_pregrid)):
-        rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i] = sample_all_params_safesSFR(random_seed = initial_seed+i*7, Nparam = Nparam)
+        rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i] = priors.sample_all_params_safesSFR(random_seed = initial_seed+i*7)
         fc_index = np.argmin(np.abs(rand_z[i] - fc_zgrid))
-        rand_seds[0:,i] = make_sed_fast(rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i], fcs[0:,0:,fc_index], sp = mocksp, cosmology = cosmo)
-
+        rand_seds[0:,i], rand_sfh_tuples[1,i], rand_sfh_tuples[0,i] = make_sed_fast(rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i], fcs[0:,0:,fc_index], sp = mocksp, cosmology = cosmo)
+        if rand_sfh_tuples[1,i] < -3:
+            rand_sfh_tuples[1,i] = -3
 
     for i in (range(N_pregrid)):
         if norm_method == 'none':
@@ -305,11 +302,10 @@ def generate_pregrid(N_pregrid = 10, Nparam = 1, initial_seed = 12, store = Fals
 
     return rand_sfh_tuples, rand_Z, rand_Av, rand_z, rand_seds, norm_method
 
-
-def load_pregrid_sednorm(fname):
+def load_atlas(fname, N_pregrid, N_param):
     # free SED normalization for easy mass and SFR fits
-
-    cat = sio.loadmat(fname)
+    fname_full = 'dense_basis/pregrids/'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
+    cat = sio.loadmat(fname_full)
     sfh_tuples = cat['rand_sfh_tuples']
     Av = cat['rand_Av'].ravel()
     Z = cat['rand_Z'].ravel()
@@ -317,4 +313,7 @@ def load_pregrid_sednorm(fname):
     seds = cat['rand_seds']
     norm_method = cat['norm_method']
 
-    return sfh_tuples, Z, Av, z, seds, norm_method
+    return sfh_tuples, Z, Av, z, seds, norm_method    
+
+def quantile_names(N_params):
+    return (np.round(np.linspace(0,100,N_params+2)))[1:-1]

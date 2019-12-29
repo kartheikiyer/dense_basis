@@ -10,7 +10,7 @@ from .priors import *
 from .gp_sfh import *
 from .plotter import *
 
-def fit_sed_pregrid(sed, sed_err, pg_theta, fit_mask = [True], norm_method = 'none', return_val = 'params', make_posterior_plots = False, make_sed_plot = False, truths = [np.nan]):
+def fit_sed_pregrid(sed, sed_err, pg_theta, fit_mask = [True], norm_method = 'none', return_val = 'params', make_posterior_plots = False, make_sed_plot = False, truths = [np.nan], zbest = None):
 
     # preprocessing:
     if len(fit_mask) == len(sed):
@@ -46,6 +46,11 @@ def fit_sed_pregrid(sed, sed_err, pg_theta, fit_mask = [True], norm_method = 'no
 
     # fitting the SED
     chi2 = np.mean((pg_seds[fit_mask,0:] - sed_normed)**2 / (sed_err_normed)**2, 0)
+    
+    if zbest is not None:
+        redshift_mask = (np.abs(pg_z - zbest) > 0.1*zbest)
+        chi2[redshift_mask] = np.amax(chi2)+1e3
+        
 
     if make_sed_plot == True:
         plt.plot(sed_normed)

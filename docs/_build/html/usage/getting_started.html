@@ -1,168 +1,302 @@
 
-<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>dense_basis: Getting Started &#8212; dense_basis v 0.1.2 documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dense_basis: Getting Started &mdash; dense basis v 0.1.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="dense_basis: SED fitting with smooth nonparametric star formation histories" href="../index.html" />
+    <link rel="next" title="Fitting SFHs with different shapes" href="../tutorials/fitting_different_SFH_shapes.html" />
+    <link rel="prev" title="dense_basis: SED fitting with smooth nonparametric star formation histories" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="../index.html" class="icon icon-home"> dense basis
+          
+
+          
+          </a>
+
+          
             
-  <blockquote>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General Usage:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">dense_basis: Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/fitting_different_SFH_shapes.html">Fitting SFHs with different shapes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dense basis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>dense_basis: Getting Started</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/usage/getting_started.rst" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<blockquote>
 <div><span class="target" id="module-dense_basis"></span></div></blockquote>
 <div class="section" id="dense-basis-getting-started">
 <h1>dense_basis: Getting Started<a class="headerlink" href="#dense-basis-getting-started" title="Permalink to this headline">¶</a></h1>
 <p>0. Before you start, if you’re fitting photometry, put your photometric filter transmission curves in a folder somewhere and make a list of filter curves inside the filter_curves folder with the paths to each filter. You’ll need to pass this to the code to generate SEDs corresponding to a given parameter set.
 Also check all the numbers within <cite>priors.py</cite> to see if they’re appropriate for your use-case.</p>
-<ol class="arabic">
-<li><p>Import the module, (the initial import takes a few minutes because it’s initializing its FSPS backend. Don’t worry about it) and visualize the set of filter curves used to make SEDs:</p>
+<p>Import the module, (the initial import takes a few minutes because it’s initializing its FSPS backend. Don’t worry about it) and visualize the set of filter curves used to make SEDs. Let’s load a filter list corresponding to the CANDELS GOODS-South photometric catalog for now:</p>
 <blockquote>
-<div><p>import dense_basis as db
-filter_list = ‘path/to/filter_list.dat’
-db.plot_filterset(filter_list, z = 1.0)</p>
+<div><p>import dense_basis as db</p>
+<p>import numpy as np</p>
+<p>filter_list = ‘dense_basis/filters/filter_list_goodss.dat’</p>
+<p>db.plot_filterset(filter_list)</p>
+</div></blockquote>
+<ol class="arabic">
+<li><p>The next step is to generate a template atlas that you will use for fitting. The advantage of doing this is that we trade time-complexity for space, which is usually much more abundant, and it only needs to be done once to fit a large dataset. Before doing this, however, we need a set of priors that we can draw from to generate this atlas. This is done using the db.Priors() class:</p>
+<blockquote>
+<div><p>priors = db.Priors()</p>
+<p>priors.Nparam = 3</p>
+<p>priors.tx_alpha = 3.0</p>
+<p>priors.squeeze_tx = True</p>
+<p>priors.plot_prior_distributions()</p>
 </div></blockquote>
 </li>
-<li><p>Generate a template atlas that you will use for fitting. The important arguments here are the size of the atlas (<cite>N_pregrid</cite>), which samples from the overall multidimensional prior distributions, and the number of SFH parameters (<cite>Nparam</cite>). The generated atlas is then stored in the /pregrids folder with the user-specified fname.</p>
+<li><p>Now we can use the priors object to generate the atlas. The important arguments here are the size of the atlas (<cite>N_pregrid</cite>), which samples from the overall multidimensional prior distributions, and the number of SFH parameters (<cite>priors.Nparam</cite>). The generated atlas is then stored in the /pregrids folder with the user-specified fname. The first few SEDs take time to compute because every time FSPS encounters a new metallicity value it needs to load a grid into memory. This happens only once, and when it is done, the atlas generation process speeds up significantly.</p>
 <blockquote>
-<div><p>fname = ‘test_atlas’
-N_pregrid = 10000
-N_param = 3
-db.generate_pregrid(N_pregrid = N_pregrid, Nparam = N_param, store = True, filter_list=filter_list, fname = fname)</p>
+<div><p>fname = ‘test_atlas’</p>
+<p>N_pregrid = 1000</p>
+<p>db.generate_atlas(N_pregrid = N_pregrid, priors = priors, fname = fname, store=True, filter_list = filter_list)</p>
 </div></blockquote>
 </li>
 <li><p>To illustrate the SED fitting procedure, let’s generate a mock SFH and its corresponding SED.</p>
 <blockquote>
-<div><p># sample from the prior space to get parameters
-rand_sfh_tuple, rand_Z, rand_Av, rand_z = db.sample_all_params_safesSFR(random_seed = 42, Nparam = N_param)</p>
-<p># generate an SFH corresponding to the SFH-tuple and see how it looks:
-rand_sfh, rand_time = db.gp_sfh_george(rand_sfh_tuple, zval = rand_z)
-fig = db.plot_sfh(rand_time, rand_sfh, lookback=True)
-sfh_truths = [rand_time, rand_sfh]</p>
-<p># generate a corresponding spectrum and multiply by filter curves to get the SED:
-rand_spec, rand_lam = db.make_spec(rand_sfh_tuple, rand_Z, rand_Av, rand_z, return_lam = True)
-obs_sed = db.calc_fnu_sed(rand_spec, rand_z, rand_lam, fkit_name = filter_list)
-obs_err = obs_sed * 0.1 # S/N of 10
-sed_truths = (rand_sfh_tuple[0], rand_sfh_tuple[1], rand_sfh_tuple[-1], rand_Av, rand_Z, rand_z)</p>
+<div><p># sample from the prior space to get parameters</p>
+<p>rand_sfh_tuple, rand_Z, rand_Av, rand_z = priors.sample_all_params_safesSFR(random_seed = 5)</p>
+<p># generate an SFH corresponding to the SFH-tuple and see how it looks:</p>
+<p>rand_sfh, rand_time = db.tuple_to_sfh(rand_sfh_tuple, zval = rand_z)</p>
+<p>fig = db.plot_sfh(rand_time, rand_sfh, lookback=True)</p>
+<p>sfh_truths = [rand_time, rand_sfh]</p>
+<p># generate a corresponding spectrum and multiply by filter curves to get the SED:</p>
+<p>_, sfr_true, mstar_true = db.make_spec(rand_sfh_tuple, rand_Z, rand_Av, rand_z, return_ms = True)</p>
+<p>rand_spec, rand_lam = db.make_spec(rand_sfh_tuple, rand_Z, rand_Av, rand_z, return_lam = True)</p>
+<p>obs_sed = db.calc_fnu_sed(rand_spec, rand_z, rand_lam, fkit_name = filter_list)</p>
+<p>obs_err = obs_sed * 0.1 # S/N of 10</p>
+<p>sed_truths = (mstar_true, sfr_true, rand_sfh_tuple[3:], rand_Z, rand_Av, rand_z)</p>
+<p>sed_truths = np.hstack(sed_truths)</p>
 </div></blockquote>
 </li>
-<li><p>Step 2 is extremely beneficial in fitting large datasets, since the atlas needs to be generated only once and can be used for fitting as many SEDs as needed using the brute-force Bayesian approach. Having generated this dataset, now an arbitrary SED (<cite>obs_sed</cite>, and its errors <cite>obs_err</cite>) can be fit using:</p>
+<li><p>Step 2 is extremely beneficial in fitting large datasets, since the atlas needs to be generated only once and can be used for fitting as many SEDs as needed using the brute-force Bayesian approach. Having generated this dataset, now an arbitrary SED (<cite>obs_sed</cite>, and its errors <cite>obs_err</cite>) can be fit using the previously generated atlas. If you are interested in seeing how the fits change with a much more finely sampled atlas, try using the precomuted atlas with N_pregrid = 100000.</p>
 <blockquote>
-<div><p># load the atlas
-pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds, norm_method = db.load_pregrid_sednorm(fname, N_pregrid, N_param)
-pg_theta = [pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds]</p>
-<p># pass the atlas and the observed SED into the fitter, fit params returns the median and 1-sigma values for the parameters being fit
-fit_params = db.fit_sed_pregrid(obs_sed, obs_err, pg_theta, norm_method=norm_method)</p>
+<div><p># load the atlas</p>
+<p>pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds, norm_method = db.load_atlas(fname, N_pregrid, priors.Nparam)</p>
+<p>pg_theta = [pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds]</p>
+<p># pass the atlas and the observed SED into the fitter, fit params returns the median and 1-sigma values for the parameters being fit</p>
+<p>fit_params = db.fit_sed_pregrid(obs_sed, obs_err, pg_theta, norm_method=norm_method)</p>
 </div></blockquote>
 </li>
 <li><p>If we are intersted in the full posteriors of the fit, this can be visualized by making the fitter return the chi2 array and then computing the full posteriors as prior*likelihood. Let’s see how it compares to the truth:</p>
 <blockquote>
-<div><dl class="simple">
-<dt>chi2_array = db.fit_sed_pregrid(obs_sed, obs_err,</dt><dd><p>pg_theta, return_val = ‘chi2’,
-norm_method=norm_method)</p>
-</dd>
-</dl>
-<p># plot parameter posteriors:
-db.plot_posteriors(chi2_array, pg_theta, truths = sed_truths)</p>
+<div><p>chi2_array = db.fit_sed_pregrid(obs_sed, obs_err, pg_theta, return_val = ‘chi2’, norm_method=norm_method)</p>
+<p># plot parameter posteriors:</p>
+<p>db.plot_posteriors(chi2_array, obs_sed, pg_theta, truths = sed_truths)</p>
 </div></blockquote>
 </li>
 <li><p>Finally, we can also plot the posterior SFH and see how it compares to the true SFH.</p>
 <blockquote>
-<div><p># plot posterior SFH
-db.plot_SFH_posterior(chi2_array, pg_theta, truths = sfh_truths)</p>
+<div><p># plot posterior SFH</p>
+<p>db.plot_SFH_posterior(chi2_array, obs_sed, pg_theta, truths = sfh_truths, sfh_threshold = 0.95)</p>
 </div></blockquote>
 </li>
 </ol>
 </div>
 
 
+           </div>
+           
           </div>
-          
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">dense_basis</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption"><span class="caption-text">General Usage:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">dense_basis: Getting Started</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="../index.html" title="previous chapter">dense_basis: SED fitting with smooth nonparametric star formation histories</a></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tutorials/fitting_different_SFH_shapes.html" class="btn btn-neutral float-right" title="Fitting SFHs with different shapes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="dense_basis: SED fitting with smooth nonparametric star formation histories" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  
 
+  <hr/>
 
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Kartheik Iyer
 
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-
-
-
+</footer>
 
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2019, Kartheik Iyer.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="../_sources/usage/getting_started.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
     
-  </body>
+   
+
+</body>
 </html>

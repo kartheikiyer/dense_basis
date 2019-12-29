@@ -13,6 +13,7 @@ dense_basis is an implementation of the Dense Basis method tailored to SED fitti
    :caption: General Usage:
    
    usage/getting_started
+   tutorials/fitting_different_SFH_shapes
    
    
 The code is designed to be intuitive to use, and and consists of three steps to get you started:

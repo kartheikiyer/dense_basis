@@ -15,6 +15,14 @@ dense_basis is an implementation of the Dense Basis method tailored to SED fitti
    usage/getting_started
    
    
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials:
+   
+   tutorials/getting_started
+   tutorials/fitting_different_SFH_shapes
+   
+   
 The code is designed to be intuitive to use, and and consists of three steps to get you started:
 
 - defining your priors
@@ -41,6 +49,7 @@ Dependencies
 - FSPS (installed in fortran, with the correct $SPS_HOME variable)
 - python-fsps (v.0.3.0+, installed in conjunction with FSPS)
 - george (v.0.3.1+)
+- corner (v.2.0.1+)
 - sklearn (v.0.21.2+)
 - astropy (v.3.2.1+)
 - numpy, scipy and matplotlib

@@ -1,0 +1,95 @@
+.. dense_basis documentation master file, created by
+   sphinx-quickstart on Wed Dec 25 22:03:18 2019.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+dense_basis: SED fitting with smooth nonparametric star formation histories
+===========================================================================
+
+dense_basis is an implementation of the Dense Basis method tailored to SED fitting, in particular, the task of recovering accurate star formation history (SFH) information from galaxy spectral energy distributions (SEDs). The current code is being adapted from its original use-case (simultaneously fitting specific large catalogs of galaxies) to being a general purpose SED fitting code and acting as a module to compress and decompress SFHs.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: General Usage:
+   
+   usage/getting_started
+   
+   
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials:
+   
+   tutorials/getting_started
+   tutorials/fitting_different_SFH_shapes
+   
+   
+The code is designed to be intuitive to use, and and consists of three steps to get you started:
+
+- defining your priors
+- generating a model atlas (params <-> SEDs) to use while fitting
+- actually fitting your data and visualizing the posteriors
+
+A more detailed description can be found [here](usage/getting_started). 
+    
+If you are interested in going off the beaten track and trying different things, please let me know so that I can help you run the code as you'd like!
+
+
+
+Features
+--------
+
+- GP-SFH module
+- Prior atlas generator - trade space for time complexity
+- SED fitter module
+
+
+Dependencies
+------------
+
+- FSPS (installed in fortran, with the correct $SPS_HOME variable)
+- python-fsps (v.0.3.0+, installed in conjunction with FSPS)
+- george (v.0.3.1+)
+- corner (v.2.0.1+)
+- sklearn (v.0.21.2+)
+- astropy (v.3.2.1+)
+- numpy, scipy and matplotlib
+- python 3.x
+
+
+Installation
+------------
+
+Ideally, you should be able to install `dense_basis` by running:
+
+    pip install dense_basis
+    
+Make sure that you have the dependencies installed before you try this, though.
+
+Contribute
+----------
+
+- Issue Tracker: github.com/kartheikiyer/dense_basis/issues
+- Source Code: github.com/kartheikiyer/dense_basis
+
+Support
+-------
+
+If you are having issues, please let me know at: kartheik.iyer@dunlap.utoronto.ca
+
+License
+-------
+
+The dense_basis project is licensed under the MIT license.
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+
+
+
+
+
