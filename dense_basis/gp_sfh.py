@@ -15,6 +15,16 @@ import scipy.io as sio
 
 from .priors import *
 
+#import pkg_resources
+
+# def get_file(folder, filename):
+#     resource_package = __name__
+#     resource_path = '/'.join((folder, filename))  # Do not use os.path.join()
+#     template = pkg_resources.resource_stream(resource_package, resource_path)
+#     return template
+
+
+#fsps_mlc = sio.loadmat(get_file('train_data','fsps_mass_loss_curve.mat'))
 fsps_mlc = sio.loadmat('dense_basis/train_data/fsps_mass_loss_curve.mat')
 fsps_time = fsps_mlc['timeax_fsps'].ravel()
 fsps_massloss = fsps_mlc['mass_loss_fsps'].ravel()

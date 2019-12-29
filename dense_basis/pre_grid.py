@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import scipy.io as sio
+import os
 
 # cosmology assumption
 from astropy.cosmology import FlatLambdaCDM
@@ -140,7 +141,10 @@ def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_d
             #print(filt_name[0:][0:])
             tempfilt = np.loadtxt(filt_name[0:][0:-1])
         else:
-            tempfilt = np.loadtxt(filt_name[0:][0:-1])
+            if os.path.exists(filt_name[0:][0:-1]):
+                tempfilt = np.loadtxt(filt_name[0:][0:-1])
+            else:
+                raise Exception('filters not found. are you sure the folder exists at the right relative path?')
 
         temp_lam_arr = tempfilt[0:,0]
         temp_response_curve = tempfilt[0:,1]
@@ -297,7 +301,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Fal
         pregrid_mdict = {'rand_sfh_tuples':rand_sfh_tuples, 'rand_Z':rand_Z, 'rand_Av':rand_Av, 'rand_z':rand_z, 'rand_seds':rand_seds, 'norm_method':norm_method, 'rand_norm_facs':rand_norm_facs}
         if fname is None:
             fname = 'sfh_pregrid_size'
-        sio.savemat('dense_basis/pregrids/'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat', mdict = pregrid_mdict)
+        sio.savemat('pregrids/'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat', mdict = pregrid_mdict)
         return
 
     return rand_sfh_tuples, rand_Z, rand_Av, rand_z, rand_seds, norm_method
