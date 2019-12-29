@@ -4,7 +4,7 @@ An implementation of the Dense Basis method tailored to SED fitting, in particul
 
 As such, it is currently in an `alpha` phase, where modules are being built and crash-tested and documenation is being written. If you are interested in testing or contributing to the repository, please shoot me an email. 
 
-Documentation: dense-basis.readthedocs.io
+Documentation can now be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io)
 
 References:
 - [Iyer & Gawiser (2017)](https://iopscience.iop.org/article/10.3847/1538-4357/aa63f0/meta)

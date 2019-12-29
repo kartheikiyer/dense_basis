@@ -25,7 +25,7 @@ def plot_sfh(timeax, sfh, lookback = False, logx = False, logy = False, fig = No
         plt.plot(np.amax(timeax) - timeax, sfh, label=label, **kwargs)
         plt.xlabel('lookback time [Gyr]');
     else:
-        plt.plot(timeax, sfh, **kwargs)
+        plt.plot(timeax, sfh, label=label, **kwargs)
         plt.xlabel('cosmic time [Gyr]');
     if label != None:
         plt.legend(edgecolor='w')
@@ -193,15 +193,15 @@ def plot_SFH_posterior(chi2_array, sed, pg_theta, truths = [], plot_ci = True, s
     plt.show()
     return
 
-def plot_SFH_posterior_v2(chi2_array, sed, pg_theta, truths = [], plot_ci = True, sfh_threshold = 0.9, Nbins = 30, max_num = 100, **kwargs):
+def plot_SFH_posterior_v2(chi2_array, sed, pg_theta, truths = [], plot_ci = True, sfh_threshold = 0.9, Nbins = 30, max_num = 100, npow = 3, **kwargs):
     
     pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds = pg_theta
-    weighted_chi2_indices = np.argsort(np.exp(-chi2_array/2))
+    weighted_chi2_indices = np.argsort(np.exp(-chi2_array/(2*np.amin(chi2_array))))
     
-    num_sfhs = np.sum(np.exp(-chi2_array[weighted_chi2_indices]/2) > sfh_threshold*(np.exp(-np.amin(chi2_array)/2)))
+    num_sfhs = np.sum(np.exp(-chi2_array/2) > sfh_threshold*(np.exp(-np.amin(chi2_array)/2)))
     if num_sfhs > max_num:
         num_sfhs == max_num
-        print('truncated to %.0f SFHs to reduce computation time. increase max_num if desired.')
+        print('truncated to %.0f SFHs to reduce computation time. increase max_num if desired.' %max_num)
     
     # to-do: add other norm_facs
     norm_fac = np.amax(sed)
@@ -220,14 +220,14 @@ def plot_SFH_posterior_v2(chi2_array, sed, pg_theta, truths = [], plot_ci = True
         temp_sfhs[0:,i], temp_times[0:,i] = tuple_to_sfh(temp_sfh_tuple, zval = pg_z[weighted_chi2_indices[-(i+1)]])
         temp_sfhs[0:,i] = np.flip(correct_for_mass_loss(np.flip(temp_sfhs[0:,i],0), temp_times[0:,i], fsps_time, fsps_massloss),0) 
         temp_sfhs_splined[0:,i] = np.interp(temp_common_time, temp_times[0:,i], np.flip(temp_sfhs[0:,i],0))
-        rel_likelihoods[i] = np.exp(-chi2_array[weighted_chi2_indices[-(i+1)]]/2)
+        rel_likelihoods[i] = np.exp(-chi2_array[weighted_chi2_indices[-(i+1)]]/(np.amin(chi2_array)*2))
     
     sfr_range = np.linspace(0, np.nanpercentile(temp_sfhs_splined,99), Nbins+1)
     sfh_median = np.zeros_like(temp_common_time)
     sfh_posterior = np.zeros((Nbins, len(temp_common_time) ))
     for i in range(len(temp_common_time)):
         
-        a,b = np.histogram(temp_sfhs_splined[i,0:], weights= rel_likelihoods**10, bins = sfr_range, density=True)
+        a,b = np.histogram(temp_sfhs_splined[i,0:], weights= rel_likelihoods**npow, bins = sfr_range, density=True)
         sfh_posterior[0:,i] = a
         n_c = np.cumsum(a)
         n_c = n_c / np.amax(n_c)
@@ -236,9 +236,9 @@ def plot_SFH_posterior_v2(chi2_array, sed, pg_theta, truths = [], plot_ci = True
         
     fig = plt.figure(figsize=(12,4))
     plt.pcolor(temp_common_time, sfr_range[0:-1], sfh_posterior,cmap='magma')
-    clbr = plt.colorbar()
-    clbr.set_label('P(SFR(t))')
-    plot_sfh(temp_common_time, sfh_median, lookback=True, fig = fig, lw=3,label='median SFH',color='b')   
+#     clbr = plt.colorbar()
+#     clbr.set_label('P(SFR(t))')
+    plot_sfh(temp_common_time, sfh_median, lookback=False, fig = fig, lw=3,label='median SFH',color='b')   
     if len(truths) == 2:
         plot_sfh(truths[0], truths[1], lookback=True, fig = fig, lw=3,label='true SFH',color='w')   
         plt.ylim(0,np.amax(truths[1])*1.5)
