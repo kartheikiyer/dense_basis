@@ -1,0 +1,17 @@
+filter_curves/Filter01_CTIO_U.txt
+filter_curves/Filter02_VIMOS_U.txt
+filter_curves/Filter03_ACS_f435w_2.txt
+filter_curves/Filter04_ACS_f606w_2.txt
+filter_curves/Filter05_ACS_f775w_2.txt
+filter_curves/Filter06_ACS_f814w_2.txt
+filter_curves/Filter07_ACS_f850lp_2.txt
+filter_curves/Filter08_WFC3_f098m_2.txt
+filter_curves/Filter09_WFC3_f105w.txt
+filter_curves/Filter10_WFC3_f125w_2.txt
+filter_curves/Filter12_WFC3_f160w.txt
+filter_curves/Filter13_ISAAC_Ks_2.txt
+filter_curves/Filter14_HawkI_Ks_2.txt
+filter_curves/Filter15_IRAC_ch1.txt
+filter_curves/Filter16_IRAC_ch2.txt
+filter_curves/Filter17_IRAC_ch3_2.txt
+filter_curves/Filter18_IRAC_ch4_2.txt

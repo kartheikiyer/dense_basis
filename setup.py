@@ -11,7 +11,7 @@ setup(
     packages=["dense_basis"],
     description="SED fitting with non-parametric star formation histories",
     long_description=open("README.md").read(),
-    package_data={"": ["README.md", "LICENSE"], "dense_basis": ["train_data/*.mat", "pregrids/*.mat", "filters/*.dat", "filters/filter_curves/goods_s/*.txt","filters/filter_curves/goods_n/*.txt", "filters/filter_curves/cosmos/*.txt", "filters/filter_curves/egs/*.txt", "filters/filter_curves/uds/*.txt"]},
+    package_data={"": ["README.md", "LICENSE"], "dense_basis": ["train_data/*.mat", "pregrids/*.mat", "filters/*.dat", "filters/filter_curves/goods_s/*.*","filters/filter_curves/goods_n/*.*", "filters/filter_curves/cosmos/*.*", "filters/filter_curves/egs/*.*", "filters/filter_curves/uds/*.*"]},
     include_package_data=True,
     classifiers=[
         "Development Status :: 3 - Alpha",

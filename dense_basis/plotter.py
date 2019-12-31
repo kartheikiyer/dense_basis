@@ -56,9 +56,9 @@ clip_bottom = True):
         plt.ylim(1e-3,np.amax(spec)*3)
     plt.show()
     
-def plot_filterset(filter_list = 'dense_basis/filters/filter_list_goodss.dat', zval = 1.0, lam_arr = 10**np.linspace(2,8,10000), rest_frame = True):
+def plot_filterset(filter_list = 'filter_list_goodss.dat', filt_dir = 'filters/', zval = 1.0, lam_arr = 10**np.linspace(2,8,10000), rest_frame = True):
         
-    filcurves, lam_z, lam_z_lores = make_filvalkit_simple(lam_arr, zval, fkit_name = filter_list, )
+    filcurves, lam_z, lam_z_lores = make_filvalkit_simple(lam_arr, zval, fkit_name = filter_list, filt_dir = filt_dir)
 
     plt.figure(figsize=(12,4))
     if rest_frame == True:
@@ -107,10 +107,13 @@ def plot_posteriors(chi2_array, sed, pg_theta, truths = []):
     plt.show()
 
 
-def plot_priors(fname, N_pregrid, N_param):
+def plot_priors(fname, N_pregrid, N_param, dir = 'pregrids/'):
 
-    fname_full = 'dense_basis/pregrids/'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
-    cat = sio.loadmat(fname_full)
+    if dir == 'internal':
+        cat = sio.loadmat(get_file('pregrids',fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'))
+    else:
+        fname_full = 'dir'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
+        cat = sio.loadmat(fname_full)
     sfh_tuples = cat['rand_sfh_tuples']
     Av = cat['rand_Av'].ravel()
     Z = cat['rand_Z'].ravel()
@@ -200,7 +203,7 @@ def plot_SFH_posterior_v2(chi2_array, sed, pg_theta, truths = [], plot_ci = True
     
     num_sfhs = np.sum(np.exp(-chi2_array/2) > sfh_threshold*(np.exp(-np.amin(chi2_array)/2)))
     if num_sfhs > max_num:
-        num_sfhs == max_num
+        num_sfhs = max_num
         print('truncated to %.0f SFHs to reduce computation time. increase max_num if desired.' %max_num)
     
     # to-do: add other norm_facs
@@ -249,6 +252,82 @@ def plot_SFH_posterior_v2(chi2_array, sed, pg_theta, truths = [], plot_ci = True
     l = plt.legend(framealpha=0.0)
     for text in l.get_texts():
         text.set_color("white")
+    plt.show()
+    
+    return
+
+
+def plot_SFH_posterior_v3(chi2_array, sed, pg_theta, truths = [], plot_ci = True, sfh_threshold = 0.9, Nbins = 30, max_num = 1000, npow = 3, **kwargs):
+    
+    pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds = pg_theta
+    weighted_chi2_indices = np.argsort(np.exp(-chi2_array/(2*np.amin(chi2_array))))
+    Nparam = pg_sfhs.shape[0]-3
+    
+    num_sfhs = np.sum(np.exp(-chi2_array/2) > sfh_threshold*(np.exp(-np.amin(chi2_array)/2)))
+    if num_sfhs > max_num:
+        num_sfhs = max_num
+        print('truncated to %.0f SFHs to reduce computation time. increase max_num if desired.' %max_num)
+    
+    # to-do: add other norm_facs
+    norm_fac = np.amax(sed)
+    
+    temp_sfh_tuple = pg_sfhs[0:, weighted_chi2_indices[-1]].copy()
+    _, temp_common_time = tuple_to_sfh(temp_sfh_tuple, zval = pg_z[np.argmin(chi2_array)])
+    
+    temp_sfhs = np.zeros((1000, num_sfhs))
+    temp_sfhs_splined = np.zeros_like(temp_sfhs)
+    temp_times = np.zeros((1000, num_sfhs))
+    rel_likelihoods = np.zeros((num_sfhs,))
+    for i in range(num_sfhs):
+        temp_sfh_tuple = pg_sfhs[0:, weighted_chi2_indices[-(i+1)]].copy()
+        temp_sfh_tuple[0] = temp_sfh_tuple[0] + np.log10(norm_fac)
+        temp_sfh_tuple[1] = temp_sfh_tuple[1] + np.log10(norm_fac)
+        temp_sfhs[0:,i], temp_times[0:,i] = tuple_to_sfh(temp_sfh_tuple, zval = pg_z[weighted_chi2_indices[-(i+1)]])
+        temp_sfhs[0:,i] = np.flip(correct_for_mass_loss(np.flip(temp_sfhs[0:,i],0), temp_times[0:,i], fsps_time, fsps_massloss),0) 
+        temp_sfhs_splined[0:,i] = np.interp(temp_common_time, temp_times[0:,i], np.flip(temp_sfhs[0:,i],0))
+        rel_likelihoods[i] = np.exp(-chi2_array[weighted_chi2_indices[-(i+1)]]/(np.amin(chi2_array)*2))
+    
+    sfr_range = np.linspace(0, np.nanpercentile(temp_sfhs_splined,99), Nbins+1)
+    sfh_median = np.zeros_like(temp_common_time)
+    sfh_up = np.zeros_like(temp_common_time)
+    sfh_dn = np.zeros_like(temp_common_time)
+    sfh_posterior = np.zeros((Nbins, len(temp_common_time) ))
+    for i in range(len(temp_common_time)):
+        a,b = np.histogram(temp_sfhs_splined[i,0:], weights= rel_likelihoods**npow, bins = sfr_range, density=True)
+        sfh_posterior[0:,i] = a
+        n_c = np.cumsum(a)
+        n_c = n_c / np.amax(n_c)
+        bin_centers = b[0:-1] + (b[1]-b[0])/2
+        sfh_median[i] = bin_centers[np.argmin(np.abs(n_c - 0.5))]
+        sfh_up[i] = bin_centers[np.argmin(np.abs(n_c - 0.16))]
+        sfh_dn[i] = bin_centers[np.argmin(np.abs(n_c - 0.84))]
+        
+    a,b,c = calctimes(temp_common_time, np.flip(sfh_median,0), Nparam+3)
+    sfh_median_smooth, time_smooth = tuple_to_sfh(np.hstack([a,b,Nparam+3,c.ravel()]), zval = pg_z[np.argmin(chi2_array)]) 
+    a,b,c = calctimes(temp_common_time, np.flip(sfh_up,0), Nparam+3)
+    sfh_up_smooth, time_smooth = tuple_to_sfh(np.hstack([a,b,Nparam+3,c.ravel()]), zval = pg_z[np.argmin(chi2_array)]) 
+    a,b,c = calctimes(temp_common_time, np.flip(sfh_dn,0), Nparam+3)
+    sfh_dn_smooth, time_smooth = tuple_to_sfh(np.hstack([a,b,Nparam+3,c.ravel()]), zval = pg_z[np.argmin(chi2_array)]) 
+        
+    fig = plt.figure(figsize=(12,4))
+#     plt.pcolor(temp_common_time, sfr_range[0:-1], sfh_posterior,cmap='magma')
+#     clbr = plt.colorbar()
+#     clbr.set_label('P(SFR(t))')
+#     db.plot_sfh(temp_common_time, sfh_median, lookback=False, fig = fig, lw=3,label='median SFH')   
+    plot_sfh(time_smooth, sfh_median_smooth, lookback=True, color='k', fig = fig, lw=3,label='median SFH')   
+    plt.fill_between(np.amax(time_smooth) - time_smooth, sfh_dn_smooth, sfh_up_smooth, color='k',alpha=0.1)
+    #plt.fill_between(temp_common_time, sfh_dn, sfh_up, color='k',alpha=0.1)
+    
+    if len(truths) == 2:
+        plot_sfh(truths[0], truths[1], lookback=True, fig = fig, lw=3,label='true SFH')   
+        plt.ylim(0,np.amax(truths[1])*1.5)
+    plt.xlim(0,np.amax(temp_common_time))
+    plt.xlabel('t [lookback time; Gyr]')
+    plt.ylabel('SFR(t)')
+    plt.ylim(0,np.amax(sfr_range[0:-1]))
+    l = plt.legend(framealpha=0.0)
+#     for text in l.get_texts():
+#         text.set_color("white")
     plt.show()
     
     return

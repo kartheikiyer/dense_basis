@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>corresponding to the getting_started page in /usage &mdash; dense basis v 0.1.2 documentation</title>
+  <title>A full SED-Fitting example &mdash; dense basis v 0.1.2 documentation</title>
   
 
   
@@ -38,8 +38,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Fitting SFHs with different shapes" href="fitting_different_SFH_shapes.html" />
-    <link rel="prev" title="dense_basis: Getting Started" href="../usage/getting_started.html" /> 
+    <link rel="next" title="SFH reconstruction test suite" href="fitting_different_SFH_shapes.html" />
+    <link rel="prev" title="Features" href="../usage/features.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,11 +85,13 @@
             
               <p class="caption"><span class="caption-text">General Usage:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../usage/getting_started.html">dense_basis: Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/features.html">Features</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">corresponding to the getting_started page in /usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">A full SED-Fitting example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#Prerequisites-to-fitting:">Prerequisites to fitting:</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#1.-Instantiate-a-Priors()-object">1. Instantiate a Priors() object</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#2.-Generate-an-atlas-of-parameters-drawn-from-the-prior-and-their-corresponding-SEDs.">2. Generate an atlas of parameters drawn from the prior and their corresponding SEDs.</a></li>
@@ -102,7 +104,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#6.-Visualize-the-SFH-posterior:">6. Visualize the SFH posterior:</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="fitting_different_SFH_shapes.html">Fitting SFHs with different shapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fitting_different_SFH_shapes.html">SFH reconstruction test suite</a></li>
 </ul>
 
             
@@ -148,7 +150,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>corresponding to the getting_started page in /usage</li>
+      <li>A full SED-Fitting example</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -389,11 +391,11 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="corresponding-to-the-getting_started-page-in-/usage">
-<h1>corresponding to the getting_started page in /usage<a class="headerlink" href="#corresponding-to-the-getting_started-page-in-/usage" title="Permalink to this headline">¶</a></h1>
-<ol class="arabic simple" start="0">
-<li><p>Instantiate the module. Make sure you have all the prerequisite packages installed.</p></li>
-</ol>
+<div class="section" id="A-full-SED-Fitting-example">
+<h1>A full SED-Fitting example<a class="headerlink" href="#A-full-SED-Fitting-example" title="Permalink to this headline">¶</a></h1>
+<p>This example is meant to lead you through an example of how to generate an atlas and use it to fit an observed spectral energy distribution (SED). The atlas essentially provides a coarse mapping from the galaxy’s stellar population parameters (stellar mass, SFR, star formation history, dust attenuation, metallicity, and redshift) to their corresponding SEDs.</p>
+<p>Instantiate the module, making sure you have all the prerequisite packages (especially python-fsps and george) installed. Don’t worry if the initial import takes a few minutes, because it’s initializing its FSPS backend.</p>
+<p>If you need to change any of the FSPS parameters, do so using <code class="docutils literal notranslate"><span class="pre">db.mocksp.params['key']</span> <span class="pre">=</span> <span class="pre">value</span></code>, consulting the <a class="reference external" href="http://dfm.io/python-fsps/current/stellarpop_api/#api-reference">python-fsps</a> API for reference.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -413,13 +415,19 @@ Starting dense_basis. please wait ~ a minute for the FSPS backend to initialize.
 Initialized stellar population with FSPS.
 </pre></div></div>
 </div>
+</div>
+<div class="section" id="Prerequisites-to-fitting:">
+<h1>Prerequisites to fitting:<a class="headerlink" href="#Prerequisites-to-fitting:" title="Permalink to this headline">¶</a></h1>
+<p>If you’re fitting photometry, put your photometric filter transmission curves in a folder somewhere and make a list of filter curves with the paths to each filter. You’ll need to pass <code class="docutils literal notranslate"><span class="pre">filter_list</span></code> and <code class="docutils literal notranslate"><span class="pre">filt_dir</span></code> as arguments to the code to generate SEDs corresponding to a given parameter set.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">db.plot_filterset()</span></code> function can be used to visualize the set of filter curves used to make SEDs. Let’s load a filter list corresponding to the CANDELS GOODS-South photometric catalog for now:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">filter_list</span> <span class="o">=</span> <span class="s1">&#39;dense_basis/filters/filter_list_goodss.dat&#39;</span>
-<span class="n">db</span><span class="o">.</span><span class="n">plot_filterset</span><span class="p">(</span><span class="n">filter_list</span><span class="p">)</span>
+<span></span><span class="n">filter_list</span> <span class="o">=</span> <span class="s1">&#39;filter_list_goodss.dat&#39;</span>
+<span class="n">filt_dir</span> <span class="o">=</span> <span class="s1">&#39;internal&#39;</span> <span class="c1"># path to directory containing filter list</span>
+<span class="n">db</span><span class="o">.</span><span class="n">plot_filterset</span><span class="p">(</span><span class="n">filter_list</span> <span class="o">=</span> <span class="n">filter_list</span><span class="p">,</span> <span class="n">filt_dir</span> <span class="o">=</span> <span class="n">filt_dir</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -427,14 +435,12 @@ Initialized stellar population with FSPS.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_getting_started_3_0.png" src="../_images/tutorials_getting_started_3_0.png" />
+<img alt="../_images/tutorials_getting_started_5_0.png" src="../_images/tutorials_getting_started_5_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Prerequisites-to-fitting:">
-<h1>Prerequisites to fitting:<a class="headerlink" href="#Prerequisites-to-fitting:" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="1.-Instantiate-a-Priors()-object">
 <h2>1. Instantiate a Priors() object<a class="headerlink" href="#1.-Instantiate-a-Priors()-object" title="Permalink to this headline">¶</a></h2>
+<p>The next step is to generate a template atlas that you will use for fitting. The advantage of doing this is that we trade time-complexity for space, which is usually much more abundant, and it only needs to be done once to fit a large dataset. Before doing this, however, we need a set of priors that we can draw from to generate this atlas. This is done using the <code class="docutils literal notranslate"><span class="pre">db.Priors()</span></code> class:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -442,7 +448,6 @@ Initialized stellar population with FSPS.
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">priors</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Priors</span><span class="p">()</span>
 <span class="n">priors</span><span class="o">.</span><span class="n">tx_alpha</span> <span class="o">=</span> <span class="mf">3.0</span>
-<span class="n">priors</span><span class="o">.</span><span class="n">squeeze_tx</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">priors</span><span class="o">.</span><span class="n">plot_prior_distributions</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -451,39 +456,58 @@ Initialized stellar population with FSPS.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_getting_started_6_0.png" src="../_images/tutorials_getting_started_6_0.png" />
+<img alt="../_images/tutorials_getting_started_7_0.png" src="../_images/tutorials_getting_started_7_0.png" />
 </div>
 </div>
 </div>
 <div class="section" id="2.-Generate-an-atlas-of-parameters-drawn-from-the-prior-and-their-corresponding-SEDs.">
 <h2>2. Generate an atlas of parameters drawn from the prior and their corresponding SEDs.<a class="headerlink" href="#2.-Generate-an-atlas-of-parameters-drawn-from-the-prior-and-their-corresponding-SEDs." title="Permalink to this headline">¶</a></h2>
+<p>Now we can use the priors object to generate the atlas. The important arguments here are the size of the atlas (<code class="docutils literal notranslate"><span class="pre">N_pregrid</span></code>), which samples from the overall multidimensional prior distributions, and the number of SFH parameters (<code class="docutils literal notranslate"><span class="pre">priors.Nparam</span></code>). The generated atlas is then stored in a local <code class="docutils literal notranslate"><span class="pre">/pregrids</span></code> folder with the user-specified fname within the current working directory. Please specify a different path using the <code class="docutils literal notranslate"><span class="pre">path</span></code> argument if you would like it to be stored in a different
+place. The first few SEDs take time to compute because every time FSPS encounters a new metallicity value it needs to load a grid into memory. This happens only once, and when it is done, the atlas generation process speeds up considerably.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;test_atlas&#39;</span>
-<span class="n">N_pregrid</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="n">N_pregrid</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">priors</span><span class="o">.</span><span class="n">Nparam</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">db</span><span class="o">.</span><span class="n">generate_atlas</span><span class="p">(</span><span class="n">N_pregrid</span> <span class="o">=</span> <span class="n">N_pregrid</span><span class="p">,</span>
                   <span class="n">priors</span> <span class="o">=</span> <span class="n">priors</span><span class="p">,</span>
                   <span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                  <span class="n">filter_list</span> <span class="o">=</span> <span class="n">filter_list</span><span class="p">)</span>
+                  <span class="n">filter_list</span> <span class="o">=</span> <span class="n">filter_list</span><span class="p">,</span> <span class="n">filt_dir</span> <span class="o">=</span> <span class="n">filt_dir</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+100%|██████████| 23/23 [00:01&lt;00:00, 18.21it/s]
+100%|██████████| 1000/1000 [04:14&lt;00:00,  3.93it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Created directory and saved atlas at : pregrids/test_atlas_1000_Nparam_3.mat
+</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-100%|██████████| 23/23 [00:01&lt;00:00, 19.12it/s]
-100%|██████████| 10000/10000 [12:07&lt;00:00, 13.75it/s]
+
 </pre></div></div>
 </div>
 </div>
 <div class="section" id="3.-Generate-a-mock-SED-to-be-fit.">
 <h2>3. Generate a mock SED to be fit.<a class="headerlink" href="#3.-Generate-a-mock-SED-to-be-fit." title="Permalink to this headline">¶</a></h2>
+<p>To illustrate the SED fitting procedure, let’s generate a mock star formation history (SFH) to recover. This can be done by sampling our priors for an SFH-tuple and then converting it to a SFR-vs-time curve using the <code class="docutils literal notranslate"><span class="pre">db.tuple_to_sfh()</span></code> command. We can then generate its corresponding spectrum, and multiply the spectrum with our prespecified filter-set to get the corresponding SED.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -500,7 +524,7 @@ Initialized stellar population with FSPS.
 <span class="c1"># generate a corresponding spectrum and multiply by filter curves to get the SED:</span>
 <span class="n">_</span><span class="p">,</span> <span class="n">sfr_true</span><span class="p">,</span> <span class="n">mstar_true</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">make_spec</span><span class="p">(</span><span class="n">rand_sfh_tuple</span><span class="p">,</span> <span class="n">rand_Z</span><span class="p">,</span> <span class="n">rand_Av</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">,</span> <span class="n">return_ms</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 <span class="n">rand_spec</span><span class="p">,</span> <span class="n">rand_lam</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">make_spec</span><span class="p">(</span><span class="n">rand_sfh_tuple</span><span class="p">,</span> <span class="n">rand_Z</span><span class="p">,</span> <span class="n">rand_Av</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">,</span> <span class="n">return_lam</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-<span class="n">obs_sed</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">calc_fnu_sed</span><span class="p">(</span><span class="n">rand_spec</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">,</span> <span class="n">rand_lam</span><span class="p">,</span> <span class="n">fkit_name</span> <span class="o">=</span> <span class="n">filter_list</span><span class="p">)</span>
+<span class="n">obs_sed</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">calc_fnu_sed</span><span class="p">(</span><span class="n">rand_spec</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">,</span> <span class="n">rand_lam</span><span class="p">,</span> <span class="n">fkit_name</span> <span class="o">=</span> <span class="n">filter_list</span><span class="p">,</span> <span class="n">filt_dir</span> <span class="o">=</span> <span class="n">filt_dir</span><span class="p">)</span>
 <span class="n">obs_err</span> <span class="o">=</span> <span class="n">obs_sed</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="c1"># S/N of 10</span>
 <span class="n">sed_truths</span> <span class="o">=</span> <span class="p">(</span><span class="n">mstar_true</span><span class="p">,</span> <span class="n">sfr_true</span><span class="p">,</span> <span class="n">rand_sfh_tuple</span><span class="p">[</span><span class="mi">3</span><span class="p">:],</span> <span class="n">rand_Z</span><span class="p">,</span> <span class="n">rand_Av</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">)</span>
 <span class="n">sed_truths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">sed_truths</span><span class="p">)</span>
@@ -511,7 +535,7 @@ Initialized stellar population with FSPS.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_getting_started_10_0.png" src="../_images/tutorials_getting_started_10_0.png" />
+<img alt="../_images/tutorials_getting_started_11_0.png" src="../_images/tutorials_getting_started_11_0.png" />
 </div>
 </div>
 </div>
@@ -520,6 +544,8 @@ Initialized stellar population with FSPS.
 <h1>SED fitting with the dense_basis package:<a class="headerlink" href="#SED-fitting-with-the-dense_basis-package:" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="4.-Load-the-previously-generated-atlas:">
 <h2>4. Load the previously generated atlas:<a class="headerlink" href="#4.-Load-the-previously-generated-atlas:" title="Permalink to this headline">¶</a></h2>
+<p>Step 2 is extremely beneficial in fitting large datasets, since the atlas needs to be generated only once and can be used for fitting as many SEDs as needed using the brute-force Bayesian approach. Having generated this dataset, now an arbitrary SED (<code class="docutils literal notranslate"><span class="pre">obs_sed</span></code>, and its errors <code class="docutils literal notranslate"><span class="pre">obs_err</span></code>) can be fit using the previously generated atlas. If you are interested in seeing how the fits change with a much more finely sampled atlas, try using the precomputed atlas with <code class="docutils literal notranslate"><span class="pre">N_pregrid</span> <span class="pre">=</span> <span class="pre">300000</span></code> (I can
+not include bigger files due to Github’s size limitations, but will try to do so on PyPI at a later date).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -530,6 +556,14 @@ Initialized stellar population with FSPS.
 <span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;test_atlas&#39;</span>
 <span class="n">N_pregrid</span> <span class="o">=</span> <span class="mi">300000</span>
 <span class="n">priors</span><span class="o">.</span><span class="n">Nparam</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;internal&#39;</span>
+
+<span class="c1"># if instead you would like to use the atlas you just generated, comment the above and instead use:</span>
+
+<span class="c1"># fname = &#39;test_atlas&#39;</span>
+<span class="c1"># N_pregrid = 1000</span>
+<span class="c1"># priors.Nparam = 3</span>
+<span class="c1"># path = &#39;pregrids/&#39;</span>
 </pre></div>
 </div>
 </div>
@@ -540,7 +574,7 @@ Initialized stellar population with FSPS.
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># load the atlas</span>
 <span class="c1">#pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds, norm_method = db.load_atlas(fname, N_pregrid, priors.Nparam)</span>
-<span class="n">pg_sfhs</span><span class="p">,</span> <span class="n">pg_Z</span><span class="p">,</span> <span class="n">pg_Av</span><span class="p">,</span> <span class="n">pg_z</span><span class="p">,</span> <span class="n">pg_seds</span><span class="p">,</span> <span class="n">norm_method</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">load_atlas</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">N_pregrid</span> <span class="o">=</span> <span class="mi">300000</span><span class="p">,</span> <span class="n">N_param</span> <span class="o">=</span> <span class="n">priors</span><span class="o">.</span><span class="n">Nparam</span><span class="p">)</span>
+<span class="n">pg_sfhs</span><span class="p">,</span> <span class="n">pg_Z</span><span class="p">,</span> <span class="n">pg_Av</span><span class="p">,</span> <span class="n">pg_z</span><span class="p">,</span> <span class="n">pg_seds</span><span class="p">,</span> <span class="n">norm_method</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">load_atlas</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">N_pregrid</span> <span class="o">=</span> <span class="n">N_pregrid</span><span class="p">,</span> <span class="n">N_param</span> <span class="o">=</span> <span class="n">priors</span><span class="o">.</span><span class="n">Nparam</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">)</span>
 <span class="n">pg_theta</span> <span class="o">=</span> <span class="p">[</span><span class="n">pg_sfhs</span><span class="p">,</span> <span class="n">pg_Z</span><span class="p">,</span> <span class="n">pg_Av</span><span class="p">,</span> <span class="n">pg_z</span><span class="p">,</span> <span class="n">pg_seds</span><span class="p">]</span>
 
 <span class="c1"># pass the atlas and the observed SED into the fitter,</span>
@@ -552,6 +586,7 @@ Initialized stellar population with FSPS.
 </div>
 <div class="section" id="5.-Fit-the-SED-and-visualize-the-parameter-posteriors:">
 <h2>5. Fit the SED and visualize the parameter posteriors:<a class="headerlink" href="#5.-Fit-the-SED-and-visualize-the-parameter-posteriors:" title="Permalink to this headline">¶</a></h2>
+<p>If we are interested in the full posteriors of the fit, this can be visualized by making the fitter return the chi2 array and then computing the full posteriors as prior*likelihood. Let’s see how it compares to the truth:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -569,12 +604,13 @@ Initialized stellar population with FSPS.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_getting_started_16_0.png" src="../_images/tutorials_getting_started_16_0.png" />
+<img alt="../_images/tutorials_getting_started_17_0.png" src="../_images/tutorials_getting_started_17_0.png" />
 </div>
 </div>
 </div>
 <div class="section" id="6.-Visualize-the-SFH-posterior:">
 <h2>6. Visualize the SFH posterior:<a class="headerlink" href="#6.-Visualize-the-SFH-posterior:" title="Permalink to this headline">¶</a></h2>
+<p>Finally, we can also plot the posterior SFH and see how it compares to the true SFH:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -589,7 +625,7 @@ Initialized stellar population with FSPS.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_getting_started_18_0.png" src="../_images/tutorials_getting_started_18_0.png" />
+<img alt="../_images/tutorials_getting_started_19_0.png" src="../_images/tutorials_getting_started_19_0.png" />
 </div>
 </div>
 </div>
@@ -603,10 +639,10 @@ Initialized stellar population with FSPS.
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="fitting_different_SFH_shapes.html" class="btn btn-neutral float-right" title="Fitting SFHs with different shapes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="fitting_different_SFH_shapes.html" class="btn btn-neutral float-right" title="SFH reconstruction test suite" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../usage/getting_started.html" class="btn btn-neutral float-left" title="dense_basis: Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../usage/features.html" class="btn btn-neutral float-left" title="Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

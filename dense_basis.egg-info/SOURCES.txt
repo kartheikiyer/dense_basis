@@ -1,0 +1,15 @@
+README.md
+setup.py
+dense_basis/__init__.py
+dense_basis/gp_sfh.py
+dense_basis/gp_sfh_old.py
+dense_basis/plotter.py
+dense_basis/pre_grid.py
+dense_basis/priors.py
+dense_basis/sed_fitter.py
+dense_basis/tests.py
+dense_basis.egg-info/PKG-INFO
+dense_basis.egg-info/SOURCES.txt
+dense_basis.egg-info/dependency_links.txt
+dense_basis.egg-info/requires.txt
+dense_basis.egg-info/top_level.txt

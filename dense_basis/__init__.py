@@ -10,9 +10,9 @@ __bibtex__ = """
 }
 """  # NOQA
 
-#from . import train_data
-#from . import pregrids
-#from . import filters
+# from . import train_data
+# from . import pregrids
+# from . import filters
 
 print('Starting dense_basis. please wait ~ a minute for the FSPS backend to initialize.')
 

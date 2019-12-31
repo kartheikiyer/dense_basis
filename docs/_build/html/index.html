@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="dense_basis: Getting Started" href="usage/getting_started.html" /> 
+    <link rel="next" title="Installation" href="usage/installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -84,14 +84,16 @@
             
               <p class="caption"><span class="caption-text">General Usage:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="usage/getting_started.html">dense_basis: Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/features.html">Features</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/getting_started.html">corresponding to the getting_started page in /usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/getting_started.html">A full SED-Fitting example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/getting_started.html#Prerequisites-to-fitting:">Prerequisites to fitting:</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/getting_started.html#SED-fitting-with-the-dense_basis-package:">SED fitting with the dense_basis package:</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/fitting_different_SFH_shapes.html">Fitting SFHs with different shapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/fitting_different_SFH_shapes.html">SFH reconstruction test suite</a></li>
 </ul>
 
             
@@ -182,17 +184,19 @@
 </style>
 <div class="section" id="dense-basis-sed-fitting-with-smooth-nonparametric-star-formation-histories">
 <h1>dense_basis: SED fitting with smooth nonparametric star formation histories<a class="headerlink" href="#dense-basis-sed-fitting-with-smooth-nonparametric-star-formation-histories" title="Permalink to this headline">¶</a></h1>
-<p>dense_basis is an implementation of the Dense Basis method tailored to SED fitting, in particular, the task of recovering accurate star formation history (SFH) information from galaxy spectral energy distributions (SEDs). The current code is being adapted from its original use-case (simultaneously fitting specific large catalogs of galaxies) to being a general purpose SED fitting code and acting as a module to compress and decompress SFHs.</p>
+<p>dense_basis is an implementation of the <a class="reference external" href="https://iopscience.iop.org/article/10.3847/1538-4357/ab2052/meta">Dense Basis</a> method tailored to SED fitting - in particular, the task of recovering accurate star formation history (SFH) information from galaxy spectral energy distributions (SEDs). The current code is being adapted from its original use-case (simultaneously fitting specific large catalogs of galaxies) to being a general purpose SED fitting code, and acting as a module to compress and decompress SFHs and other time-series.</p>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">General Usage:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="usage/getting_started.html">dense_basis: Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/features.html">Features</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/getting_started.html">corresponding to the getting_started page in /usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/getting_started.html">A full SED-Fitting example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/getting_started.html#Prerequisites-to-fitting:">Prerequisites to fitting:</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/getting_started.html#1.-Instantiate-a-Priors()-object">1. Instantiate a Priors() object</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/getting_started.html#2.-Generate-an-atlas-of-parameters-drawn-from-the-prior-and-their-corresponding-SEDs.">2. Generate an atlas of parameters drawn from the prior and their corresponding SEDs.</a></li>
@@ -205,64 +209,38 @@
 <li class="toctree-l2"><a class="reference internal" href="tutorials/getting_started.html#6.-Visualize-the-SFH-posterior:">6. Visualize the SFH posterior:</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/fitting_different_SFH_shapes.html">Fitting SFHs with different shapes</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/fitting_different_SFH_shapes.html">SFH reconstruction test suite</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/fitting_different_SFH_shapes.html#Different-SFH-shapes:">Different SFH shapes:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/fitting_different_SFH_shapes.html#Plotting-posteriors-after-fitting-these-SFHs:">Plotting posteriors after fitting these SFHs:</a></li>
 </ul>
 </li>
 </ul>
 </div>
-<p>The code is designed to be intuitive to use, and and consists of three steps to get you started:</p>
+<p>The code is designed to be intuitive to use, and and consists of three steps to get you started doing SED fitting:</p>
 <ul class="simple">
 <li><p>defining your priors</p></li>
 <li><p>generating a model atlas (params &lt;-&gt; SEDs) to use while fitting</p></li>
 <li><p>actually fitting your data and visualizing the posteriors</p></li>
 </ul>
-<p>A more detailed description can be found [here](usage/getting_started).</p>
-<p>If you are interested in going off the beaten track and trying different things, please let me know so that I can help you run the code as you’d like!</p>
-<div class="section" id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>GP-SFH module</p></li>
-<li><p>Prior atlas generator - trade space for time complexity</p></li>
-<li><p>SED fitter module</p></li>
-</ul>
-</div>
-<div class="section" id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>FSPS (installed in fortran, with the correct $SPS_HOME variable)</p></li>
-<li><p>python-fsps (v.0.3.0+, installed in conjunction with FSPS)</p></li>
-<li><p>george (v.0.3.1+)</p></li>
-<li><p>corner (v.2.0.1+)</p></li>
-<li><p>sklearn (v.0.21.2+)</p></li>
-<li><p>astropy (v.3.2.1+)</p></li>
-<li><p>numpy, scipy and matplotlib</p></li>
-<li><p>python 3.x</p></li>
-</ul>
-</div>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>Ideally, you should be able to install <cite>dense_basis</cite> by running:</p>
-<blockquote>
-<div><p>pip install dense_basis</p>
-</div></blockquote>
-<p>Make sure that you have the dependencies installed before you try this, though.</p>
-</div>
+<p>More detailed descriptions of these modules can be found in the tutorials. If you are interested in going off the beaten track and trying different things, please let me know so that I can help you run the code as you’d like!</p>
 <div class="section" id="contribute">
 <h2>Contribute<a class="headerlink" href="#contribute" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Issue Tracker: github.com/kartheikiyer/dense_basis/issues</p></li>
-<li><p>Source Code: github.com/kartheikiyer/dense_basis</p></li>
+<li><p>Issue Tracker: <a class="reference external" href="https://github.com/kartheikiyer/dense_basis/issues">https://github.com/kartheikiyer/dense_basis/issues</a></p></li>
+<li><p>Source Code: <a class="reference external" href="https://github.com/kartheikiyer/dense_basis">https://github.com/kartheikiyer/dense_basis</a></p></li>
 </ul>
 </div>
 <div class="section" id="support">
 <h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
 <p>If you are having issues, please let me know at: <a class="reference external" href="mailto:kartheik&#46;iyer&#37;&#52;&#48;dunlap&#46;utoronto&#46;ca">kartheik<span>&#46;</span>iyer<span>&#64;</span>dunlap<span>&#46;</span>utoronto<span>&#46;</span>ca</a></p>
 </div>
-<div class="section" id="license">
-<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p>The dense_basis project is licensed under the MIT license.</p>
+<div class="section" id="license-attribution">
+<h2>License &amp; Attribution<a class="headerlink" href="#license-attribution" title="Permalink to this headline">¶</a></h2>
+<p>Copyright 2017-2019 Kartheik Iyer and contributors.</p>
+<p><cite>dense_basis</cite> is being developed by <a class="reference external" href="http://kartheikiyer.github.io">Kartheik Iyer</a> in a
+<a class="reference external" href="https://github.com/kartheikiyer/dense_basis">public GitHub repository</a>.
+The source code is made available under the terms of the MIT license.</p>
+<p>If you make use of this code, please cite <a class="reference external" href="https://iopscience.iop.org/article/10.3847/1538-4357/ab2052/meta">the recent Dense Basis paper</a>.</p>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
@@ -282,7 +260,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="usage/getting_started.html" class="btn btn-neutral float-right" title="dense_basis: Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="usage/installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Fitting SFHs with different shapes &mdash; dense basis v 0.1.2 documentation</title>
+  <title>SFH reconstruction test suite &mdash; dense basis v 0.1.2 documentation</title>
   
 
   
@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="corresponding to the getting_started page in /usage" href="getting_started.html" /> 
+    <link rel="prev" title="A full SED-Fitting example" href="getting_started.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -84,14 +84,16 @@
             
               <p class="caption"><span class="caption-text">General Usage:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../usage/getting_started.html">dense_basis: Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/features.html">Features</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">corresponding to the getting_started page in /usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">A full SED-Fitting example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html#Prerequisites-to-fitting:">Prerequisites to fitting:</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html#SED-fitting-with-the-dense_basis-package:">SED fitting with the dense_basis package:</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Fitting SFHs with different shapes</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SFH reconstruction test suite</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Different-SFH-shapes:">Different SFH shapes:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Plotting-posteriors-after-fitting-these-SFHs:">Plotting posteriors after fitting these SFHs:</a></li>
 </ul>
@@ -141,7 +143,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Fitting SFHs with different shapes</li>
+      <li>SFH reconstruction test suite</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -382,8 +384,8 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Fitting-SFHs-with-different-shapes">
-<h1>Fitting SFHs with different shapes<a class="headerlink" href="#Fitting-SFHs-with-different-shapes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="SFH-reconstruction-test-suite">
+<h1>SFH reconstruction test suite<a class="headerlink" href="#SFH-reconstruction-test-suite" title="Permalink to this headline">¶</a></h1>
 <p>Now that we have started up the package and built an atlas, let’s see how we do at fitting SFHs for various galaxy demographics - starforming, starbursting, quenched and rejuvenated galaxies. First thing, let’s load the package:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -406,16 +408,16 @@ Initialized stellar population with FSPS.
 </div>
 <p>Next we load the atlas that we built previously, with</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;test_atlas&#39;</span>
-<span class="n">N_pregrid</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">N_pregrid</span> <span class="o">=</span> <span class="mi">300000</span>
 <span class="n">Nparam</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="n">filter_list</span> <span class="o">=</span> <span class="s1">&#39;dense_basis/filters/filter_list_goodss.dat&#39;</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;internal&#39;</span>
 
-<span class="n">pg_sfhs</span><span class="p">,</span> <span class="n">pg_Z</span><span class="p">,</span> <span class="n">pg_Av</span><span class="p">,</span> <span class="n">pg_z</span><span class="p">,</span> <span class="n">pg_seds</span><span class="p">,</span> <span class="n">norm_method</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">load_atlas</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">N_pregrid</span><span class="p">,</span> <span class="n">Nparam</span><span class="p">)</span>
+<span class="n">pg_sfhs</span><span class="p">,</span> <span class="n">pg_Z</span><span class="p">,</span> <span class="n">pg_Av</span><span class="p">,</span> <span class="n">pg_z</span><span class="p">,</span> <span class="n">pg_seds</span><span class="p">,</span> <span class="n">norm_method</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">load_atlas</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">N_pregrid</span><span class="p">,</span> <span class="n">Nparam</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
 <span class="n">pg_theta</span> <span class="o">=</span> <span class="p">[</span><span class="n">pg_sfhs</span><span class="p">,</span> <span class="n">pg_Z</span><span class="p">,</span> <span class="n">pg_Av</span><span class="p">,</span> <span class="n">pg_z</span><span class="p">,</span> <span class="n">pg_seds</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -424,20 +426,19 @@ Initialized stellar population with FSPS.
 <h2>Different SFH shapes:<a class="headerlink" href="#Different-SFH-shapes:" title="Permalink to this headline">¶</a></h2>
 <p>We now define SFH-tuples corresponding to galaxies from different demographics, as follows:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">rising_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.7</span><span class="p">,</span><span class="mf">0.9</span><span class="p">])</span>
-<span class="n">regular_sfg_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.75</span><span class="p">])</span>
-<span class="n">young_quenched_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.8</span><span class="p">])</span>
-<span class="n">old_quenched_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.4</span><span class="p">])</span>
-<span class="n">old_very_quenched_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.4</span><span class="p">])</span>
-<span class="n">double_peaked_SF_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.7</span><span class="p">])</span>
-<span class="n">double_peaked_Q_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.8</span><span class="p">])</span>
+<span></span><span class="n">rising_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.7</span><span class="p">,</span><span class="mf">0.85</span><span class="p">])</span>
+<span class="n">regular_sfg_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="mf">0.35</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">0.55</span><span class="p">,</span><span class="mf">0.8</span><span class="p">])</span>
+<span class="n">post_starburst_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="mf">0.6</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.8</span><span class="p">,</span><span class="mf">0.9</span><span class="p">])</span>
+<span class="n">old_quenched_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.15</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">0.5</span><span class="p">])</span>
+<span class="n">double_peaked_SF_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.30</span><span class="p">,</span><span class="mf">0.7</span><span class="p">])</span>
+<span class="n">double_peaked_Q_sfh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.7</span><span class="p">])</span>
 
-<span class="n">sfh_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">rising_sfh</span><span class="p">,</span> <span class="n">regular_sfg_sfh</span><span class="p">,</span> <span class="n">young_quenched_sfh</span><span class="p">,</span> <span class="n">old_quenched_sfh</span><span class="p">,</span> <span class="n">old_very_quenched_sfh</span><span class="p">,</span> <span class="n">double_peaked_SF_sfh</span><span class="p">,</span> <span class="n">double_peaked_Q_sfh</span><span class="p">]</span>
-<span class="n">sfh_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rising_sfh&#39;</span><span class="p">,</span> <span class="s1">&#39;regular_sfg_sfh&#39;</span><span class="p">,</span> <span class="s1">&#39;young_quenched_sfh&#39;</span><span class="p">,</span> <span class="s1">&#39;old_quenched_sfh&#39;</span><span class="p">,</span> <span class="s1">&#39;old_very_quenched_sfh&#39;</span><span class="p">,</span> <span class="s1">&#39;double_peaked_SF_sfh&#39;</span><span class="p">,</span> <span class="s1">&#39;double_peaked_Q_sfh&#39;</span><span class="p">]</span>
+<span class="n">sfh_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">rising_sfh</span><span class="p">,</span> <span class="n">regular_sfg_sfh</span><span class="p">,</span> <span class="n">post_starburst_sfh</span><span class="p">,</span> <span class="n">old_quenched_sfh</span><span class="p">,</span> <span class="n">double_peaked_SF_sfh</span><span class="p">,</span> <span class="n">double_peaked_Q_sfh</span><span class="p">]</span>
+<span class="n">sfh_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Rising/Starburst galaxy&#39;</span><span class="p">,</span> <span class="s1">&#39;Regular star-forming galaxy&#39;</span><span class="p">,</span> <span class="s1">&#39;Post-Starburst galaxy&#39;</span><span class="p">,</span> <span class="s1">&#39;Quiescent SFH&#39;</span><span class="p">,</span> <span class="s1">&#39;Double-peaked SFH [SF]&#39;</span><span class="p">,</span> <span class="s1">&#39;Double-peaked SFH [quiescent]&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -447,28 +448,27 @@ Initialized stellar population with FSPS.
 <p>We then loop through these SFHs, and - generate corresponding SEDs with randomly sampled values for dust, metallicity, and redshifts (although <span class="math notranslate nohighlight">\(z\sim 1\)</span>) - fit these SEDs using the dense basis SED fitter, and - use the resulting likelihood surface to plot and SFH posterior, comparing it to the truth</p>
 <p>Since FSPS takes a while to load up the grids corresponding to different metallicities, the following cell might take a while when executed the first time, but subsequent runs should be fast.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">priors</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Priors</span><span class="p">()</span>
 <span class="n">priors</span><span class="o">.</span><span class="n">Nparam</span> <span class="o">=</span> <span class="n">Nparam</span>
 <span class="n">priors</span><span class="o">.</span><span class="n">tx_alpha</span> <span class="o">=</span> <span class="mf">3.0</span>
-<span class="n">priors</span><span class="o">.</span><span class="n">squeeze_tx</span> <span class="o">=</span> <span class="kc">True</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sfh_list</span><span class="p">)):</span>
+<span></span><span class="k">def</span> <span class="nf">sfh_fitting_test</span><span class="p">(</span><span class="n">sfh_tuple</span><span class="p">,</span> <span class="n">sfh_name</span><span class="p">,</span> <span class="n">max_num</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">):</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---------- &#39;</span><span class="o">+</span><span class="n">sfh_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39; ------------&#39;</span><span class="p">)</span>
-    <span class="c1"># sample from the prior space to get other parameters, manually setting the SFH</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---------- &#39;</span><span class="o">+</span><span class="n">sfh_name</span><span class="o">+</span><span class="s1">&#39; ------------&#39;</span><span class="p">)</span>
+
     <span class="n">rand_sfh_tuple</span><span class="p">,</span> <span class="n">rand_Z</span><span class="p">,</span> <span class="n">rand_Av</span><span class="p">,</span> <span class="n">rand_z</span> <span class="o">=</span> <span class="n">priors</span><span class="o">.</span><span class="n">sample_all_params_safesSFR</span><span class="p">(</span><span class="n">random_seed</span> <span class="o">=</span> <span class="mi">7</span><span class="p">)</span>
-    <span class="n">rand_sfh_tuple</span> <span class="o">=</span> <span class="n">sfh_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">rand_sfh_tuple</span> <span class="o">=</span> <span class="n">sfh_tuple</span>
 
     <span class="c1"># generate an SFH corresponding to the SFH-tuple and see how it looks:</span>
     <span class="n">rand_sfh</span><span class="p">,</span> <span class="n">rand_time</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">tuple_to_sfh</span><span class="p">(</span><span class="n">rand_sfh_tuple</span><span class="p">,</span> <span class="n">zval</span> <span class="o">=</span> <span class="n">rand_z</span><span class="p">)</span>
@@ -478,7 +478,10 @@ Initialized stellar population with FSPS.
     <span class="c1"># generate a corresponding spectrum and multiply by filter curves to get the SED:</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">sfr_true</span><span class="p">,</span> <span class="n">mstar_true</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">make_spec</span><span class="p">(</span><span class="n">rand_sfh_tuple</span><span class="p">,</span> <span class="n">rand_Z</span><span class="p">,</span> <span class="n">rand_Av</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">,</span> <span class="n">return_ms</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
     <span class="n">rand_spec</span><span class="p">,</span> <span class="n">rand_lam</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">make_spec</span><span class="p">(</span><span class="n">rand_sfh_tuple</span><span class="p">,</span> <span class="n">rand_Z</span><span class="p">,</span> <span class="n">rand_Av</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">,</span> <span class="n">return_lam</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-    <span class="n">obs_sed</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">calc_fnu_sed</span><span class="p">(</span><span class="n">rand_spec</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">,</span> <span class="n">rand_lam</span><span class="p">,</span> <span class="n">fkit_name</span> <span class="o">=</span> <span class="n">filter_list</span><span class="p">)</span>
+
+    <span class="n">filter_list</span> <span class="o">=</span> <span class="s1">&#39;filter_list_goodss.dat&#39;</span>
+    <span class="n">filt_dir</span> <span class="o">=</span> <span class="s1">&#39;internal&#39;</span>
+    <span class="n">obs_sed</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">calc_fnu_sed</span><span class="p">(</span><span class="n">rand_spec</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">,</span> <span class="n">rand_lam</span><span class="p">,</span> <span class="n">fkit_name</span> <span class="o">=</span> <span class="n">filter_list</span><span class="p">,</span> <span class="n">filt_dir</span> <span class="o">=</span> <span class="n">filt_dir</span><span class="p">)</span>
     <span class="n">obs_err</span> <span class="o">=</span> <span class="n">obs_sed</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="c1"># S/N of 33</span>
     <span class="n">sed_truths</span> <span class="o">=</span> <span class="p">(</span><span class="n">mstar_true</span><span class="p">,</span> <span class="n">sfr_true</span><span class="p">,</span> <span class="n">rand_sfh_tuple</span><span class="p">[</span><span class="mi">3</span><span class="p">:],</span> <span class="n">rand_Z</span><span class="p">,</span> <span class="n">rand_Av</span><span class="p">,</span> <span class="n">rand_z</span><span class="p">)</span>
     <span class="n">sed_truths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">sed_truths</span><span class="p">)</span>
@@ -486,7 +489,18 @@ Initialized stellar population with FSPS.
     <span class="n">chi2_array</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">fit_sed_pregrid</span><span class="p">(</span><span class="n">obs_sed</span><span class="p">,</span> <span class="n">obs_err</span><span class="p">,</span>
     <span class="n">pg_theta</span><span class="p">,</span> <span class="n">return_val</span> <span class="o">=</span> <span class="s1">&#39;chi2&#39;</span><span class="p">,</span> <span class="n">norm_method</span><span class="o">=</span><span class="n">norm_method</span><span class="p">)</span>
 
-    <span class="n">db</span><span class="o">.</span><span class="n">plot_SFH_posterior</span><span class="p">(</span><span class="n">chi2_array</span><span class="p">,</span> <span class="n">obs_sed</span><span class="p">,</span> <span class="n">pg_theta</span><span class="p">,</span> <span class="n">truths</span> <span class="o">=</span> <span class="n">sfh_truths</span><span class="p">,</span> <span class="n">sfh_threshold</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">plot_SFH_posterior_v3</span><span class="p">(</span><span class="n">chi2_array</span><span class="p">,</span> <span class="n">obs_sed</span><span class="p">,</span> <span class="n">pg_theta</span><span class="p">,</span> <span class="n">truths</span><span class="o">=</span><span class="n">sfh_truths</span><span class="p">,</span> <span class="n">sfh_threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_num</span> <span class="o">=</span> <span class="n">max_num</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sfh_list</span><span class="p">)):</span>
+
+    <span class="n">sfh_fitting_test</span><span class="p">(</span><span class="n">sfh_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sfh_names</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -495,14 +509,15 @@ Initialized stellar population with FSPS.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
----------- rising_sfh ------------
+---------- Rising/Starburst galaxy ------------
+truncated to 1000 SFHs to reduce computation time. increase max_num if desired.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_fitting_different_SFH_shapes_8_1.png" src="../_images/tutorials_fitting_different_SFH_shapes_8_1.png" />
+<img alt="../_images/tutorials_fitting_different_SFH_shapes_9_1.png" src="../_images/tutorials_fitting_different_SFH_shapes_9_1.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -510,14 +525,15 @@ Initialized stellar population with FSPS.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
----------- regular_sfg_sfh ------------
+---------- Regular star-forming galaxy ------------
+truncated to 1000 SFHs to reduce computation time. increase max_num if desired.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_fitting_different_SFH_shapes_8_3.png" src="../_images/tutorials_fitting_different_SFH_shapes_8_3.png" />
+<img alt="../_images/tutorials_fitting_different_SFH_shapes_9_3.png" src="../_images/tutorials_fitting_different_SFH_shapes_9_3.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -525,14 +541,15 @@ Initialized stellar population with FSPS.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
----------- young_quenched_sfh ------------
+---------- Post-Starburst galaxy ------------
+truncated to 1000 SFHs to reduce computation time. increase max_num if desired.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_fitting_different_SFH_shapes_8_5.png" src="../_images/tutorials_fitting_different_SFH_shapes_8_5.png" />
+<img alt="../_images/tutorials_fitting_different_SFH_shapes_9_5.png" src="../_images/tutorials_fitting_different_SFH_shapes_9_5.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -540,14 +557,15 @@ Initialized stellar population with FSPS.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
----------- old_quenched_sfh ------------
+---------- Quiescent SFH ------------
+truncated to 1000 SFHs to reduce computation time. increase max_num if desired.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_fitting_different_SFH_shapes_8_7.png" src="../_images/tutorials_fitting_different_SFH_shapes_8_7.png" />
+<img alt="../_images/tutorials_fitting_different_SFH_shapes_9_7.png" src="../_images/tutorials_fitting_different_SFH_shapes_9_7.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -555,14 +573,15 @@ Initialized stellar population with FSPS.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
----------- old_very_quenched_sfh ------------
+---------- Double-peaked SFH [SF] ------------
+truncated to 1000 SFHs to reduce computation time. increase max_num if desired.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_fitting_different_SFH_shapes_8_9.png" src="../_images/tutorials_fitting_different_SFH_shapes_8_9.png" />
+<img alt="../_images/tutorials_fitting_different_SFH_shapes_9_9.png" src="../_images/tutorials_fitting_different_SFH_shapes_9_9.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -570,33 +589,20 @@ Initialized stellar population with FSPS.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
----------- double_peaked_SF_sfh ------------
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/tutorials_fitting_different_SFH_shapes_8_11.png" src="../_images/tutorials_fitting_different_SFH_shapes_8_11.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
----------- double_peaked_Q_sfh ------------
+---------- Double-peaked SFH [quiescent] ------------
+truncated to 1000 SFHs to reduce computation time. increase max_num if desired.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_fitting_different_SFH_shapes_8_13.png" src="../_images/tutorials_fitting_different_SFH_shapes_8_13.png" />
+<img alt="../_images/tutorials_fitting_different_SFH_shapes_9_11.png" src="../_images/tutorials_fitting_different_SFH_shapes_9_11.png" />
 </div>
 </div>
-<p>We see that we do well in recovering the general shape of the SFHs, as well as derived quantities like stellar mass and recent SFR. The poorest reconstruction in the lot is the regular star forming galaxy, followed by the double-peaked quenched galaxy and the old quenched galaxy. Let’s look at these in a bit more detail: - regular SF galaxy: this is mostly a pregrid size issue, and expanding to a larger atlas (N_pregrid &gt; 100000) usually makes the posterior more well-behaved. - double-peaked
-quenched galaxy: while this performs reasonably well, the older peak is poorly constrained due to low S/N from the oldest stellar populations. This also leads to the uncertainties not being estimated accurately, which is also usually mitigated by a larger atlas. - old quiescent galaxy: This is simply a S/N issue. The fitter detects that the galaxy is quiescent, but doesn’t have enough information to constrain the age, leading to the posterior being prior rather than likelihood dominated.</p>
+<p>We see that we do well in recovering the general shape of the SFHs, as well as derived quantities like stellar mass and recent SFR. The poorer reconstructions are discussed below in a bit more detail: - <strong>Post-starburst galaxy</strong>: While most of the true SFH is within the uncertainties, the reconstruction is not able to completely recover the recent SF prior to the quenching. This is mostly a prior issue, with post-starburst galaxies disfavoured by our adopted prior - in this case, going to larger
+Nparam or coupling the sSFR to the redshift allows for more variety in the SFH shapes and helps recover this population. - <strong>Double-peaked quenched galaxy</strong>: while this performs reasonably well, the peaks are poorly constrained due to low S/N from the old stellar populations. In this case, we actually find th older peak to be better constrained mainly because the SFH has to be 0 at the big bang. This also leads to the uncertainties not being estimated accurately, which is also usually mitigated
+by a larger atlas. - <strong>Old quiescent galaxy and the double-peaked SF galaxy</strong>: This is simply a S/N issue. The fitter detects that the galaxy is quiescent, but doesn’t have enough information to accurately constrain the older stellar populations, leading to the posterior being prior rather than likelihood dominated.</p>
 </div>
 </div>
 
@@ -609,7 +615,7 @@ quenched galaxy: while this performs reasonably well, the older peak is poorly c
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="getting_started.html" class="btn btn-neutral float-left" title="corresponding to the getting_started page in /usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="A full SED-Fitting example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

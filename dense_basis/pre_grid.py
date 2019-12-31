@@ -2,6 +2,7 @@ import numpy as np
 from tqdm import tqdm
 import scipy.io as sio
 import os
+import pkg_resources
 
 # cosmology assumption
 from astropy.cosmology import FlatLambdaCDM
@@ -108,7 +109,7 @@ def make_sed_fast(sfh_tuple, metval, dustval, zval, filcurves, igmval = True, re
     sed = calc_fnu_sed_fast(spec, filcurves)
     return sed, logsfr, logmstar
 
-def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_dir = 'dense_basis/filters/'):
+def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_dir = 'filters/'):
 
     # import os
     # print(os.listdir())
@@ -117,11 +118,20 @@ def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_d
     # change this to logspace later to avoid problems
     # when dealing with FIR filters.
     lam_z_lores = np.arange(2000,150000,2000)
+    
+    resource_package = __name__
+    resource_path = '/'.join(('filters', fkit_name))  # Do not use os.path.join()
+    template = pkg_resources.resource_string(resource_package, resource_path)
 
-    f = open(fkit_name,'r')
+    if filt_dir == 'internal':
+        f = template.split()
+        temp = template.split()
+    else:
+        f = open(fkit_name,'r')
+        temp = f.readlines()
 
     # read in the file with the filter curves
-    temp = f.readlines()
+    
     if vb == True:
         print('number of filters to be read in: '+str(len(temp)))
 
@@ -135,16 +145,26 @@ def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_d
 
     for i in range(numlines):
 
-        filt_name = filt_dir+temp[i]
-
-        if i == numlines-1:
-            #print(filt_name[0:][0:])
-            tempfilt = np.loadtxt(filt_name[0:][0:-1])
+        if (filt_dir == 'internal') & (fkit_name == 'filter_list_goodss.dat'):
+            tempfilt = np.loadtxt(get_file('filters/filter_curves/goods_s', temp[i][22:].decode("utf-8")))
+        elif (filt_dir == 'internal') & (fkit_name == 'filter_list_goodsn.dat'):
+            tempfilt = np.loadtxt(get_file('filters/filter_curves/goods_n', temp[i][22:].decode("utf-8")))
+        elif (filt_dir == 'internal') & (fkit_name == 'filter_list_cosmos.dat'):
+            tempfilt = np.loadtxt(get_file('filters/filter_curves/cosmos', temp[i][21:].decode("utf-8")))
+        elif (filt_dir == 'internal') & (fkit_name == 'filter_list_egs.dat'):
+            tempfilt = np.loadtxt(get_file('filters/filter_curves/egs', temp[i][18:].decode("utf-8")))
+        elif (filt_dir == 'internal') & (fkit_name == 'filter_list_uds.dat'):
+            tempfilt = np.loadtxt(get_file('filters/filter_curves/uds', temp[i][18:].decode("utf-8")))
         else:
-            if os.path.exists(filt_name[0:][0:-1]):
+            filt_name = filt_dir+temp[i]
+            if i == numlines-1:
+                #print(filt_name[0:][0:])
                 tempfilt = np.loadtxt(filt_name[0:][0:-1])
             else:
-                raise Exception('filters not found. are you sure the folder exists at the right relative path?')
+                if os.path.exists(filt_name[0:][0:-1]):
+                    tempfilt = np.loadtxt(filt_name[0:][0:-1])
+                else:
+                    raise Exception('filters not found. are you sure the folder exists at the right relative path?')
 
         temp_lam_arr = tempfilt[0:,0]
         temp_response_curve = tempfilt[0:,1]
@@ -165,7 +185,8 @@ def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_d
         if vb == True:
             plt.plot(np.log10(lam_z),splinedcurve,'k--',label=filt_name[0:][0:-1])
 
-    f.close()
+    if (filt_dir != 'internal'):
+        f.close()
 
     if vb == True:
 
@@ -178,7 +199,7 @@ def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_d
 
     return filcurves, lam_z, lam_z_lores
 
-def calc_fnu_sed(spec,z,lam, fkit_name = 'filter_list.dat'):
+def calc_fnu_sed(spec,z,lam, fkit_name = 'filter_list.dat', filt_dir = 'filters/'):
 
     #kitname = '/home/kiyer/Documents/codex_dense_basis_data/new_stoc_analysis/letter1_fkilt/codex_filter_val_kit_fsps_'+str(z)+'.mat'
     #filt_data = sio.loadmat(kitname)
@@ -186,7 +207,7 @@ def calc_fnu_sed(spec,z,lam, fkit_name = 'filter_list.dat'):
     #lam_z_lores = np.array(filt_data['lambda_z_lores'])
     #lam_z_input = lam*(1+z)
 
-    filcurves,lam_z, lam_z_lores = make_filvalkit_simple(lam,z,fkit_name = fkit_name)
+    filcurves,lam_z, lam_z_lores = make_filvalkit_simple(lam,z,fkit_name = fkit_name, filt_dir = filt_dir)
 
     #spec_interp = np.interp(lam_z,lam_z_input,spec)
 
@@ -221,7 +242,7 @@ def calc_fnu_sed_fast(fnuspec,filcurves):
         filvals[tindex] = np.sum(temp1.T[0:,0]*temp2)/np.sum(filcurves[0:,tindex])
     return filvals
 
-def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = False, filter_list = 'filter_list.dat', norm_method = 'max', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None):
+def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = False, filter_list = 'filter_list.dat', filt_dir = 'filters/', norm_method = 'max', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None, path = 'pregrids/'):
 
     """Generate a pregrid of galaxy properties and their corresponding SEDs
         drawn from the prior distributions defined in priors.py
@@ -254,14 +275,14 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Fal
 
     fc_zgrid = np.arange(priors.z_min-z_step, priors.z_max+z_step, z_step)
 
-    temp_fc, temp_lz, temp_lz_lores = make_filvalkit_simple(lam,priors.z_min,fkit_name = filter_list)
+    temp_fc, temp_lz, temp_lz_lores = make_filvalkit_simple(lam,priors.z_min,fkit_name = filter_list, filt_dir = filt_dir)
 
     fcs= np.zeros((temp_fc.shape[0], temp_fc.shape[1], len(fc_zgrid)))
     lzs = np.zeros((temp_lz.shape[0], len(fc_zgrid)))
     lzs_lores = np.zeros((temp_lz_lores.shape[0], len(fc_zgrid)))
 
     for i in tqdm(range(len(fc_zgrid))):
-        fcs[0:,0:,i], lzs[0:,i], lzs_lores[0:,i] = make_filvalkit_simple(lam,fc_zgrid[i],fkit_name = filter_list)
+        fcs[0:,0:,i], lzs[0:,i], lzs_lores[0:,i] = make_filvalkit_simple(lam,fc_zgrid[i],fkit_name = filter_list, filt_dir = filt_dir)
 
     rand_sfh_tuples = np.zeros((Nparam+3, N_pregrid))
     rand_Z = np.zeros((N_pregrid,))
@@ -301,20 +322,30 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Fal
         pregrid_mdict = {'rand_sfh_tuples':rand_sfh_tuples, 'rand_Z':rand_Z, 'rand_Av':rand_Av, 'rand_z':rand_z, 'rand_seds':rand_seds, 'norm_method':norm_method, 'rand_norm_facs':rand_norm_facs}
         if fname is None:
             fname = 'sfh_pregrid_size'
-        sio.savemat('pregrids/'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat', mdict = pregrid_mdict)
+        if os.path.exists(path):
+            print('Path exists. Saved atlas at : '+path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat')
+        else:
+            os.mkdir(path)
+            print('Created directory and saved atlas at : '+path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat')
+        sio.savemat(path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat', mdict = pregrid_mdict)
         return
 
     return rand_sfh_tuples, rand_Z, rand_Av, rand_z, rand_seds, norm_method
 
-def load_atlas(fname, N_pregrid, N_param):
-    # free SED normalization for easy mass and SFR fits
-    fname_full = 'dense_basis/pregrids/'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
+def load_atlas(fname, N_pregrid, N_param, path = 'pregrids/'):
+    if path == 'internal':
+        fname = fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
+        fname_full = get_file('pregrids', fname)
+    else:
+        # add unit test here to check for valid paths..
+        fname_full = path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
     cat = sio.loadmat(fname_full)
     sfh_tuples = cat['rand_sfh_tuples']
     Av = cat['rand_Av'].ravel()
     Z = cat['rand_Z'].ravel()
     z = cat['rand_z'].ravel()
     seds = cat['rand_seds']
+    # free SED normalization for easy mass and SFR fits
     norm_method = cat['norm_method']
 
     return sfh_tuples, Z, Av, z, seds, norm_method    

@@ -15,17 +15,16 @@ import scipy.io as sio
 
 from .priors import *
 
-#import pkg_resources
+import pkg_resources
 
-# def get_file(folder, filename):
-#     resource_package = __name__
-#     resource_path = '/'.join((folder, filename))  # Do not use os.path.join()
-#     template = pkg_resources.resource_stream(resource_package, resource_path)
-#     return template
+def get_file(folder, filename):
+    resource_package = __name__
+    resource_path = '/'.join((folder, filename))  # Do not use os.path.join()
+    template = pkg_resources.resource_stream(resource_package, resource_path)
+    return template
 
-
-#fsps_mlc = sio.loadmat(get_file('train_data','fsps_mass_loss_curve.mat'))
-fsps_mlc = sio.loadmat('dense_basis/train_data/fsps_mass_loss_curve.mat')
+fsps_mlc = sio.loadmat(get_file('train_data','fsps_mass_loss_curve.mat'))
+#fsps_mlc = sio.loadmat('dense_basis/train_data/fsps_mass_loss_curve.mat')
 fsps_time = fsps_mlc['timeax_fsps'].ravel()
 fsps_massloss = fsps_mlc['mass_loss_fsps'].ravel()
 
@@ -169,3 +168,18 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', set_sfr_100Myr = F
 
 
 
+def calctimes(timeax,sfh,nparams):
+    
+    massint = np.cumsum(sfh)
+    massint_normed = massint/np.amax(massint)
+    tx = np.zeros((nparams,))
+    for i in range(nparams):
+        tx[i] = timeax[np.argmin(np.abs(massint_normed - 1*(i+1)/(nparams+1)))]
+        #tx[i] = (np.argmin(np.abs(massint_normed - 1*(i+1)/(nparams+1))))
+        #print(1*(i+1)/(nparams+1))
+        
+    #mass = np.log10(np.sum(sfh)*1e9)
+    mass = np.log10(np.trapz(sfh,timeax*1e9))
+    sfr = np.log10(sfh[-1])
+        
+    return mass, sfr, tx/np.amax(timeax)
