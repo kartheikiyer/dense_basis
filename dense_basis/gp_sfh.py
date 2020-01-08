@@ -183,3 +183,15 @@ def calctimes(timeax,sfh,nparams):
     sfr = np.log10(sfh[-1])
         
     return mass, sfr, tx/np.amax(timeax)
+
+
+def scale_t50(t50_val = 1.0, zval = 1.0):
+    """
+    Change a t50 value from lookback time in Gyr at a given redshift 
+    to fraction of the age of the universe.
+    
+    inputs: t50 [Gyr, lookback time], redshift
+    outputs: t50 [fraction of the age of the universe, cosmic time]
+    """
+    
+    return (1 - t50_val/cosmo.age(zval).value)

@@ -14,12 +14,12 @@ setup(
     package_data={"": ["README.md", "LICENSE"], "dense_basis": ["train_data/*.mat", "pregrids/*.mat", "filters/*.dat", "filters/filter_curves/goods_s/*.*","filters/filter_curves/goods_n/*.*", "filters/filter_curves/cosmos/*.*", "filters/filter_curves/egs/*.*", "filters/filter_curves/uds/*.*"]},
     include_package_data=True,
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",
-        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
         ],
     install_requires=["matplotlib", "numpy", "scipy", "george", "sklearn"]
 )

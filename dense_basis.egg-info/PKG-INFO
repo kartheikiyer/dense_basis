@@ -14,9 +14,9 @@ Description: # Dense Basis SED fitting
         
         ### Installation and usage:
         
-        To use the package, please clone the repository and run `python setup.py install` within the dense_basis folder. More detailed intstructions can be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io).
+        To use the package, clone the repository and run `python setup.py install` within the dense_basis folder. More detailed intstructions can be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io).
         
-        Documentation on usage and basic tutorials can now be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io). 
+        Documentation on usage and basic tutorials can also be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io). 
         
         A good place to get started is [here](https://github.com/kartheikiyer/dense_basis/blob/master/docs/tutorials/getting_started.ipynb).
         
@@ -28,9 +28,9 @@ Description: # Dense Basis SED fitting
         - kartheik.iyer@dunlap.utoronto.ca
         
 Platform: UNKNOWN
-Classifier: Development Status :: 3 - Alpha
+Classifier: Development Status :: 4 - Beta
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
 Classifier: Operating System :: OS Independent
-Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.7

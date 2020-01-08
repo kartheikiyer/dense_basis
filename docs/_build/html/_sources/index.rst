@@ -22,6 +22,7 @@ dense_basis is an implementation of the `Dense Basis <https://iopscience.iop.org
    :maxdepth: 2
    :caption: Tutorials:
    
+   tutorials/the_gp_sfh_module
    tutorials/getting_started
    tutorials/fitting_different_SFH_shapes
    
