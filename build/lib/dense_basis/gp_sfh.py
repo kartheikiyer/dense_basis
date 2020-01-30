@@ -184,6 +184,10 @@ def calctimes(timeax,sfh,nparams):
         
     return mass, sfr, tx/np.amax(timeax)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> adc700fe222e7c2cea9974720569dd446b424e3e
 def scale_t50(t50_val = 1.0, zval = 1.0):
     """
     Change a t50 value from lookback time in Gyr at a given redshift 

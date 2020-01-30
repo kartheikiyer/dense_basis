@@ -19,7 +19,7 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",
-        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
         ],
     install_requires=["matplotlib", "numpy", "scipy", "george", "sklearn"]
 )
