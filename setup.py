@@ -4,7 +4,7 @@ import os
 
 setup(
     name="dense_basis",
-    version="0.1.2",
+    version="0.1.4",
     author="Kartheik Iyer",
     author_email="kartheik.iyer@dunlap.utoronto.ca",
     url = "https://github.com/kartheikiyer/dense_basis",
@@ -14,7 +14,7 @@ setup(
     package_data={"": ["README.md", "LICENSE"], "dense_basis": ["train_data/*.mat", "pregrids/*.mat", "filters/*.dat", "filters/filter_curves/goods_s/*.*","filters/filter_curves/goods_n/*.*", "filters/filter_curves/cosmos/*.*", "filters/filter_curves/egs/*.*", "filters/filter_curves/uds/*.*"]},
     include_package_data=True,
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",

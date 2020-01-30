@@ -173,9 +173,9 @@ class Priors(object):
                 sfh_tuples[0:,i], Zs[i], Avs[i], zs[i] = self.sample_all_params(random_seed = random_seed+i*7)
         return sfh_tuples, Zs, Avs, zs
     
-    def plot_prior_distributions(self):
+    def plot_prior_distributions(self, num_draws = 100000):
         
-        a,b,c,d = self.make_N_prior_draws(size=100000, random_seed=10)
+        a,b,c,d = self.make_N_prior_draws(size = num_draws, random_seed=10)
         theta_arr = np.vstack((a[0,0:], a[1,0:], a[3:,0:], b,c,d))
         
         txs = ['t'+'%.0f' %i for i in quantile_names(self.Nparam)]

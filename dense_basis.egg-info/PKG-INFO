@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: dense-basis
-Version: 0.1.2
+Version: 0.1.3
 Summary: SED fitting with non-parametric star formation histories
 Home-page: https://github.com/kartheikiyer/dense_basis
 Author: Kartheik Iyer
@@ -14,9 +14,9 @@ Description: # Dense Basis SED fitting
         
         ### Installation and usage:
         
-        To use the package, please clone the repository and run `python setup.py install` within the dense_basis folder. More detailed intstructions can be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io).
+        To use the package, clone the repository and run `python setup.py install` within the dense_basis folder. More detailed intstructions can be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io).
         
-        Documentation on usage and basic tutorials can now be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io). 
+        Documentation on usage and basic tutorials can also be found at [dense-basis.readthedocs.io](https://dense-basis.readthedocs.io). 
         
         A good place to get started is [here](https://github.com/kartheikiyer/dense_basis/blob/master/docs/tutorials/getting_started.ipynb).
         

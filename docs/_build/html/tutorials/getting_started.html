@@ -393,7 +393,9 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="section" id="A-full-SED-Fitting-example">
 <h1>A full SED-Fitting example<a class="headerlink" href="#A-full-SED-Fitting-example" title="Permalink to this headline">¶</a></h1>
-<p>This example is meant to lead you through an example of how to generate an atlas and use it to fit an observed spectral energy distribution (SED). The atlas essentially provides a coarse mapping from the galaxy’s stellar population parameters (stellar mass, SFR, star formation history, dust attenuation, metallicity, and redshift) to their corresponding SEDs.</p>
+<p>This tutorial goes through the things that need to be done to fit the observed spectral energy distributions (SEDs) of galaxies. This is different from SED fitting codes that use a sampler while fitting to create their posteriors, in the sense that we pre-sample the prior volume prior to fitting, trading space for time complexity. This results in a moderately lengthy initialization period where the method generates an atlas of parameters drawn from the priors and SEDs corresponding to these
+parameters with a user-specified filter-set, which can then be used to fit any number of SEDs in an extremely short amount of time. (Further iterations of the code are also planned to include variants with live samplers for edge-cases and objects with pathological likelihood surfaces.)</p>
+<p>The atlas essentially provides a coarse mapping from the galaxy’s stellar population parameters (stellar mass, SFR, star formation history, dust attenuation, metallicity, and redshift) to their corresponding SEDs.</p>
 <p>Instantiate the module, making sure you have all the prerequisite packages (especially python-fsps and george) installed. Don’t worry if the initial import takes a few minutes, because it’s initializing its FSPS backend.</p>
 <p>If you need to change any of the FSPS parameters, do so using <code class="docutils literal notranslate"><span class="pre">db.mocksp.params['key']</span> <span class="pre">=</span> <span class="pre">value</span></code>, consulting the <a class="reference external" href="http://dfm.io/python-fsps/current/stellarpop_api/#api-reference">python-fsps</a> API for reference.</p>
 <div class="nbinput docutils container">
@@ -442,7 +444,7 @@ Initialized stellar population with FSPS.
 <h2>1. Instantiate a Priors() object<a class="headerlink" href="#1.-Instantiate-a-Priors()-object" title="Permalink to this headline">¶</a></h2>
 <p>The next step is to generate a template atlas that you will use for fitting. The advantage of doing this is that we trade time-complexity for space, which is usually much more abundant, and it only needs to be done once to fit a large dataset. Before doing this, however, we need a set of priors that we can draw from to generate this atlas. This is done using the <code class="docutils literal notranslate"><span class="pre">db.Priors()</span></code> class:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -592,6 +594,41 @@ not include bigger files due to Github’s size limitations, but will try to do 
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">%</span><span class="k">timeit</span> db.fit_sed_pregrid(obs_sed, obs_err, pg_theta, return_val = &#39;chi2&#39;, norm_method=norm_method)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+66.2 ms ± 364 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="mi">60</span><span class="o">/</span><span class="p">(</span><span class="mf">66e-3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+909.090909090909
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">chi2_array</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">fit_sed_pregrid</span><span class="p">(</span><span class="n">obs_sed</span><span class="p">,</span> <span class="n">obs_err</span><span class="p">,</span>
 <span class="n">pg_theta</span><span class="p">,</span> <span class="n">return_val</span> <span class="o">=</span> <span class="s1">&#39;chi2&#39;</span><span class="p">,</span> <span class="n">norm_method</span><span class="o">=</span><span class="n">norm_method</span><span class="p">)</span>
 
@@ -604,7 +641,7 @@ not include bigger files due to Github’s size limitations, but will try to do 
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_getting_started_17_0.png" src="../_images/tutorials_getting_started_17_0.png" />
+<img alt="../_images/tutorials_getting_started_19_0.png" src="../_images/tutorials_getting_started_19_0.png" />
 </div>
 </div>
 </div>
@@ -625,7 +662,7 @@ not include bigger files due to Github’s size limitations, but will try to do 
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_getting_started_19_0.png" src="../_images/tutorials_getting_started_19_0.png" />
+<img alt="../_images/tutorials_getting_started_21_0.png" src="../_images/tutorials_getting_started_21_0.png" />
 </div>
 </div>
 </div>

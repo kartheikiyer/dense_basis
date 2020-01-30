@@ -21,6 +21,9 @@ priors = Priors()
 #                     Calculating spectra and SEDs
 #-----------------------------------------------------------------------
 
+def get_path(filename):
+    return os.path.dirname(os.path.realpath(filename))
+
 def convert_to_microjansky(spec,z,cosmology):
     """Convert a spectrum in L_\nu (Solar luminosity/Hz, default python-fsps
         output) to F_\nu units in microjansky
@@ -118,24 +121,43 @@ def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_d
     # change this to logspace later to avoid problems
     # when dealing with FIR filters.
     lam_z_lores = np.arange(2000,150000,2000)
-    
-    resource_package = __name__
-    resource_path = '/'.join(('filters', fkit_name))  # Do not use os.path.join()
-    template = pkg_resources.resource_string(resource_package, resource_path)
 
     if filt_dir == 'internal':
+        resource_package = __name__
+        resource_path = '/'.join(('filters', fkit_name))  # Do not use os.path.join()
+        template = pkg_resources.resource_string(resource_package, resource_path)
         f = template.split()
         temp = template.split()
     else:
-        f = open(fkit_name,'r')
+        if filt_dir[-1] == '/':
+            f = open(filt_dir+fkit_name,'r')
+        else:
+            f = open(filt_dir+'/'+fkit_name,'r')
         temp = f.readlines()
+        #resource_package = os.path.dirname(os.path.realpath(__file__))
+        #resource_package = __file__
+        # resource_package = __name__
+        # if filt_dir[-1] == '/':
+        #     resource_path = '/'.join((filt_dir[0:-1], fkit_name))
+        # else:
+        #     resource_path = '/'.join((filt_dir, fkit_name))  # Do not use os.path.join()
+        #
+        # print(resource_package)
+        # print(resource_path)
+        # template = pkg_resources.resource_string(resource_package, resource_path)
+        # f = template.split()
+        # temp = template.split()
+        #
+        # print(temp)
 
     # read in the file with the filter curves
-    
+
     if vb == True:
         print('number of filters to be read in: '+str(len(temp)))
 
     numlines = len(temp)
+    if temp[-1] == '\n':
+        numlines = len(temp)-1
 
     filcurves = np.zeros((len(lam_z),numlines))
     filcurves_lores = np.zeros((len(lam_z_lores),numlines))
@@ -156,10 +178,13 @@ def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_d
         elif (filt_dir == 'internal') & (fkit_name == 'filter_list_uds.dat'):
             tempfilt = np.loadtxt(get_file('filters/filter_curves/uds', temp[i][18:].decode("utf-8")))
         else:
-            filt_name = filt_dir+temp[i]
+            if filt_dir[-1] == '/':
+                filt_name = filt_dir+temp[i]
+            else:
+                filt_name = filt_dir+'/'+temp[i]
             if i == numlines-1:
                 #print(filt_name[0:][0:])
-                tempfilt = np.loadtxt(filt_name[0:][0:-1])
+                tempfilt = np.loadtxt(filt_name[0:-1])
             else:
                 if os.path.exists(filt_name[0:][0:-1]):
                     tempfilt = np.loadtxt(filt_name[0:][0:-1])
@@ -255,7 +280,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Fal
             filter_list[filename]: File that contains a list of filter curves.
             z_step[float]: Step size in redshift for filter curve grid.
                 Default is 0.01.
-            norm_method[string, default = 'none']: normalization for SEDs and SFHs.
+            norm_method[string, default = 'max']: normalization for SEDs and SFHs.
                 Currently supported arguments are 'none', 'max', 'median', 'area'.
             sp[stellar population object]: FSPS stellar population object. Initialized previously for speed.
             cosmo[astropy cosmology object]: cosmology. Default is FlatLambdaCDM
@@ -294,6 +319,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Fal
     for i in tqdm(range(N_pregrid)):
         rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i] = priors.sample_all_params_safesSFR(random_seed = initial_seed+i*7)
         fc_index = np.argmin(np.abs(rand_z[i] - fc_zgrid))
+        # get the correct stellar mass (accounting for mass loss) and SFR
         rand_seds[0:,i], rand_sfh_tuples[1,i], rand_sfh_tuples[0,i] = make_sed_fast(rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i], fcs[0:,0:,fc_index], sp = mocksp, cosmology = cosmo)
         if rand_sfh_tuples[1,i] < -3:
             rand_sfh_tuples[1,i] = -3
@@ -348,7 +374,7 @@ def load_atlas(fname, N_pregrid, N_param, path = 'pregrids/'):
     # free SED normalization for easy mass and SFR fits
     norm_method = cat['norm_method']
 
-    return sfh_tuples, Z, Av, z, seds, norm_method    
+    return sfh_tuples, Z, Av, z, seds, norm_method
 
 def quantile_names(N_params):
     return (np.round(np.linspace(0,100,N_params+2)))[1:-1]
