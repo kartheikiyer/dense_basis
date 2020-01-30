@@ -75,7 +75,7 @@ def fit_sed_pregrid(sed, sed_err, pg_theta, fit_mask = [True], fit_method = 'chi
             plt.plot(sed_normed)
             plt.plot(sed_normed+sed_err_normed,'k--')
             plt.plot(sed_normed-sed_err_normed,'k--')
-            plt.plot(pg_seds[0:,np.argmin(chi2)])
+            plt.plot(pg_seds[fit_mask,np.argmin(chi2)])
             plt.show()
 
         if make_posterior_plots == True:
