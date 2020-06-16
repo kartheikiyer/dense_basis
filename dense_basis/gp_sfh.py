@@ -103,7 +103,7 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', set_sfr_100Myr = F
     # generate an SFH from an input tuple (Mass, SFR, {tx}) at a specified redshift
     
     
-    Nparam = sfh_tuple[2]
+    Nparam = int(sfh_tuple[2])
     mass_quantiles = np.linspace(0,1,Nparam+2)
     time_quantiles = np.zeros_like(mass_quantiles)
     time_quantiles[-1] = 1
