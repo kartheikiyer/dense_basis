@@ -11,9 +11,14 @@ cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
 from .priors import *
 from .gp_sfh import *
 
-import fsps
-mocksp = fsps.StellarPopulation(compute_vega_mags=False, zcontinuous=1,sfh=0, imf_type=1, logzsol=0.0, dust_type=2, dust2=0.0, add_neb_emission=True)
-print('Initialized stellar population with FSPS.')
+try:
+    import fsps
+    mocksp = fsps.StellarPopulation(compute_vega_mags=False, zcontinuous=1,sfh=0, imf_type=1, logzsol=0.0, dust_type=2, dust2=0.0, add_neb_emission=True)
+    print('Initialized stellar population with FSPS.')
+
+except:
+    mocksp = None
+    print('Failed to load FSPS, only GP-SFH module will be available.')
 
 priors = Priors()
 
