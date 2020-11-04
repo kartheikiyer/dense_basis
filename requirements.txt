@@ -1,3 +1,4 @@
 nbsphinx
 george
 corner
+hickle

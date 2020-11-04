@@ -83,19 +83,21 @@ def quantile_names(N_params):
     return (np.round(np.linspace(0,100,N_params+2)))[1:-1]
 
 
-def plot_posteriors(chi2_array, sed, pg_theta, truths = []):
+def plot_posteriors(chi2_array, norm_fac, sed, atlas, truths = []):
     set_plot_style()
 
     if len(truths) > 0:
         corner_truths = truths
 #         corner_truths[3:(3+int(sed_truths[2]))] = corner_truths[3:(3+int(sed_truths[2]))]/cosmo.age(corner_truths[-1]).value
-    pg_params = np.vstack([pg_theta[0][0,0:], pg_theta[0][1,0:], pg_theta[0][3:,0:], pg_theta[1], pg_theta[2], pg_theta[3]])
+    #pg_params = np.vstack([pg_theta[0][0,0:], pg_theta[0][1,0:], pg_theta[0][3:,0:], pg_theta[1], pg_theta[2], pg_theta[3]])
+    sfrvals = atlas['sfr'].copy()
+    sfrvals[sfrvals<-3] = -3
+    pg_params = np.vstack([atlas['mstar'],sfrvals,atlas['sfh_tuple'][0:,3:].T,atlas['met'].ravel(),atlas['dust'].ravel(),atlas['zval'].ravel()])
     txs = ['t'+'%.0f' %i for i in quantile_names(pg_params.shape[0]-5)]
     pg_labels = ['log M*', 'log SFR', 'Z', 'Av', 'z']
     pg_labels[2:2] = txs
 
     corner_params = pg_params.copy()
-    norm_fac = np.amax(sed)
     corner_params[0,0:] += np.log10(norm_fac)
     corner_params[1,0:] += np.log10(norm_fac)
 
@@ -149,14 +151,16 @@ def plot_priors(fname, N_pregrid, N_param, dir = 'pregrids/'):
     plt.show()
 
 
-def plot_SFH_posterior(chi2_array, sed, pg_theta, truths = [], plot_ci = True, sfh_threshold = 0.9, **kwargs):
+def plot_SFH_posterior(chi2_array, norm_fac, sed, atlas, truths = [], plot_ci = True, sfh_threshold = 0.9, **kwargs):
     # to be phased out with a newer function
     set_plot_style()
 
-    pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds = pg_theta
+    #pg_sfhs, pg_Z, pg_Av, pg_z, pg_seds = pg_theta
+    pg_sfhs = atlas['sfh_tuple'].T
+    pg_z = atlas['zval'].ravel()
+
     weighted_chi2_indices = np.argsort(np.exp(-chi2_array/2))
     num_sfhs = np.sum(np.exp(-chi2_array[weighted_chi2_indices]/2) > sfh_threshold*(np.exp(-np.amin(chi2_array)/2)))
-    norm_fac = np.amax(sed)
 
     temp_sfhs = np.zeros((1000, num_sfhs))
     temp_times = np.zeros((1000, num_sfhs))
@@ -169,9 +173,6 @@ def plot_SFH_posterior(chi2_array, sed, pg_theta, truths = [], plot_ci = True, s
         temp_sfhs[0:,i] = np.flip(correct_for_mass_loss(np.flip(temp_sfhs[0:,i],0), temp_times[0:,i], fsps_time, fsps_massloss),0)
 
         rel_likelihoods[i] = np.exp(-chi2_array[weighted_chi2_indices[-(i+1)]]/2)
-
-
-
 
     if plot_ci == False:
         for i in range(num_sfhs):

@@ -3,6 +3,7 @@ from tqdm import tqdm
 import scipy.io as sio
 import os
 import pkg_resources
+import hickle
 
 # cosmology assumption
 from astropy.cosmology import FlatLambdaCDM
@@ -14,11 +15,11 @@ from .gp_sfh import *
 try:
     import fsps
     mocksp = fsps.StellarPopulation(compute_vega_mags=False, zcontinuous=1,sfh=0, imf_type=1, logzsol=0.0, dust_type=2, dust2=0.0, add_neb_emission=True)
-    print('Initialized stellar population with FSPS.')
+    print('Starting dense_basis. please wait ~ a minute for the FSPS backend to initialize.')
 
 except:
     mocksp = None
-    print('Failed to load FSPS, only GP-SFH module will be available.')
+    print('Starting dense_basis. Failed to load FSPS, only GP-SFH module will be available.')
 
 priors = Priors()
 
@@ -88,7 +89,6 @@ def make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = Fals
     else:
         return spec_ujy
 
-
 def make_sed_fast(sfh_tuple, metval, dustval, zval, filcurves, igmval = True, return_lam = False, sp = mocksp, cosmology = cosmo):
 
     """Generate and multiply a spectrum with previously generated
@@ -110,10 +110,10 @@ def make_sed_fast(sfh_tuple, metval, dustval, zval, filcurves, igmval = True, re
             cosmo[astropy cosmology object]: cosmology.
                 Default is FlatLambdaCDM.
         Returns:
-            sed[1d numpy array, len = Nfilters]: SED in F_\nu (\muJy)
+            sed [1d numpy array, len = Nfilters]: SED in F_nu (muJy)
         """
 
-    spec, logsfr, logmstar = make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_ms = True, return_lam = False, sp = mocksp, cosmology = cosmo)
+    spec, logsfr, logmstar = make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_ms = True, return_lam = False, sp = sp, cosmology = cosmo)
     sed = calc_fnu_sed_fast(spec, filcurves)
     return sed, logsfr, logmstar
 
@@ -262,7 +262,6 @@ def calc_fnu_sed(spec,z,lam, fkit_name = 'filter_list.dat', filt_dir = 'filters/
         #filvals[i] = filcurves[np.where(filcurves[0:,i]>0),i]*fnuspec[np.where(filcurves[0:,i]>0)]/np.sum(filcurves[0:,i])
     return filvals
 
-
 #def calc_fnu_sed_fast(spec,z,lam,filcurves,lam_z, lam_z_lores):
 def calc_fnu_sed_fast(fnuspec,filcurves):
     filvals = np.zeros((filcurves.shape[1],))
@@ -272,7 +271,7 @@ def calc_fnu_sed_fast(fnuspec,filcurves):
         filvals[tindex] = np.sum(temp1.T[0:,0]*temp2)/np.sum(filcurves[0:,tindex])
     return filvals
 
-def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = False, filter_list = 'filter_list.dat', filt_dir = 'filters/', norm_method = 'max', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None, path = 'pregrids/'):
+def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = True, filter_list = 'filter_list.dat', filt_dir = 'filters/', norm_method = 'median', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None, path = 'pregrids/'):
 
     """Generate a pregrid of galaxy properties and their corresponding SEDs
         drawn from the prior distributions defined in priors.py
@@ -299,87 +298,129 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Fal
             norm_method: Argument for how SEDs are normalized, pass into fitter
         """
 
+    print('generating atlas with: ')
+    print(priors.Nparam, ' tx parameters, ', priors.sfr_prior_type, ' SFR sampling', priors.sfh_treatment,' SFH treatment', priors.met_treatment,' met sampling', priors.dust_model, ' dust attenuation', priors.dust_prior,' dust prior', priors.decouple_sfr,' SFR decoupling.')
+
+    zval_all = []
+    sfh_tuple_all = []
+    norm_all = []
+    dust_all = []
+    met_all = []
+    sed_all = []
+    mstar_all = []
+    sfr_all = []
+    sim_timeax_all = []
+    sim_sfh_all = []
+
     Nparam = priors.Nparam
-    rand_sfh_tuple, rand_Z, rand_Av, rand_z = priors.sample_all_params_safesSFR(random_seed = initial_seed)
-    _, lam = make_spec(rand_sfh_tuple, rand_Z, rand_Av, rand_z, igmval = True, return_lam = True, sp = mocksp, cosmology = cosmo)
-
-    fc_zgrid = np.arange(priors.z_min-z_step, priors.z_max+z_step, z_step)
-
-    temp_fc, temp_lz, temp_lz_lores = make_filvalkit_simple(lam,priors.z_min,fkit_name = filter_list, filt_dir = filt_dir)
-
-    fcs= np.zeros((temp_fc.shape[0], temp_fc.shape[1], len(fc_zgrid)))
-    lzs = np.zeros((temp_lz.shape[0], len(fc_zgrid)))
-    lzs_lores = np.zeros((temp_lz_lores.shape[0], len(fc_zgrid)))
-
-    for i in tqdm(range(len(fc_zgrid))):
-        fcs[0:,0:,i], lzs[0:,i], lzs_lores[0:,i] = make_filvalkit_simple(lam,fc_zgrid[i],fkit_name = filter_list, filt_dir = filt_dir)
-
-    rand_sfh_tuples = np.zeros((Nparam+3, N_pregrid))
-    rand_Z = np.zeros((N_pregrid,))
-    rand_Av = np.zeros((N_pregrid,))
-    rand_z = np.zeros((N_pregrid,))
-    rand_seds = np.zeros((fcs.shape[1],N_pregrid))
-    rand_norm_facs = np.zeros((N_pregrid,))
 
     for i in tqdm(range(N_pregrid)):
-        rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i] = priors.sample_all_params_safesSFR(random_seed = initial_seed+i*7)
-        fc_index = np.argmin(np.abs(rand_z[i] - fc_zgrid))
-        # get the correct stellar mass (accounting for mass loss) and SFR
-        rand_seds[0:,i], rand_sfh_tuples[1,i], rand_sfh_tuples[0,i] = make_sed_fast(rand_sfh_tuples[0:,i], rand_Z[i], rand_Av[i], rand_z[i], fcs[0:,0:,fc_index], sp = mocksp, cosmology = cosmo)
-        if rand_sfh_tuples[1,i] < -3:
-            rand_sfh_tuples[1,i] = -3
 
-    for i in (range(N_pregrid)):
+        zval = priors.sample_z_prior()
+
+        massval = priors.sample_mass_prior()
+        sfrval = priors.sample_sfr_prior()
+        txparam = priors.sample_tx_prior()
+        sfh_tuple = np.hstack((massval, sfrval, Nparam, txparam))
+        norm = 1.0
+        sfh, timeax = tuple_to_sfh(sfh_tuple, zval, decouple_sfr = priors.decouple_sfr, decouple_sfr_time = priors.decouple_sfr_time)
+        dust = priors.sample_Av_prior()
+        met = priors.sample_Z_prior()
+
+        #-------------------------------------------
+
+        sp.params['sfh'] = 3
+        sp.set_tabular_sfh(timeax, sfh)
+        sp.params['dust2'] = dust
+        sp.params['logzsol'] = met
+        sp.params['add_igm_absorption'] = True
+        sp.params['add_neb_emission'] = True
+        sp.params['add_neb_continuum'] = True
+        sp.params['imf_type'] = 1 # Chabrier
+        sp.params['zred'] = zval
+
+        lam, spec = sp.get_spectrum(tage = cosmo.age(zval).value)
+        spec_ujy = convert_to_microjansky(spec, zval, cosmo)
+
+        if i == 0:
+            # make grid of filter transmission curves for faster computation
+            fc_zgrid = np.arange(priors.z_min-z_step, priors.z_max+z_step, z_step)
+            temp_fc, temp_lz, temp_lz_lores = make_filvalkit_simple(lam,priors.z_min,fkit_name = filter_list, filt_dir = filt_dir)
+
+            fcs= np.zeros((temp_fc.shape[0], temp_fc.shape[1], len(fc_zgrid)))
+            lzs = np.zeros((temp_lz.shape[0], len(fc_zgrid)))
+            lzs_lores = np.zeros((temp_lz_lores.shape[0], len(fc_zgrid)))
+
+            for i in tqdm(range(len(fc_zgrid))):
+                fcs[0:,0:,i], lzs[0:,i], lzs_lores[0:,i] = make_filvalkit_simple(lam,fc_zgrid[i],fkit_name = filter_list, filt_dir = filt_dir)
+
+        fc_index = np.argmin(np.abs(zval - fc_zgrid))
+        sed = calc_fnu_sed_fast(spec_ujy, fcs[0:,0:,fc_index])
+
+        #-------------------------------------------
+
         if norm_method == 'none':
             # no normalization
             norm_fac = 1
         elif norm_method == 'max':
             # normalize SEDs to 1 - seems to work better than median for small grids
-            norm_fac = np.amax(rand_seds[0:,i])
+            norm_fac = np.amax(sed)
         elif norm_method == 'median':
             # normalize SEDs to median
-            norm_fac = np.median(rand_seds[0:,i])
+            norm_fac = np.nanmedian(sed)
         elif norm_method == 'area':
             # normalize SFH to 10^9 Msun
-            norm_fac == 10**(rand_sfh_tuples[0,i] - 9)
+            norm_fac == 10**(massval - 9)
         else:
             raise ValueError('undefined normalization argument')
-        rand_sfh_tuples[0,i] = rand_sfh_tuples[0,i] - np.log10(norm_fac)
-        rand_sfh_tuples[1,i] = rand_sfh_tuples[1,i] - np.log10(norm_fac)
-        rand_seds[0:,i] = rand_seds[0:,i]/norm_fac
-        rand_norm_facs[i] = norm_fac
+
+        sed = sed/norm_fac
+        norm = norm/norm_fac
+        mstar = np.log10(sp.stellar_mass / norm_fac)
+        sfr = np.log10(sp.sfr / norm_fac)
+        sfh_tuple[0] = sfh_tuple[0] - np.log10(norm_fac)
+        sfh_tuple[1] = sfh_tuple[1] - np.log10(norm_fac)
+
+        #-------------------------------------------
+
+        zval_all.append(zval)
+        sfh_tuple_all.append(sfh_tuple)
+        norm_all.append(norm)
+        dust_all.append(dust)
+        met_all.append(met)
+        sed_all.append(sed)
+        mstar_all.append(mstar)
+        sfr_all.append(sfr)
+
+
+    pregrid_dict = {'zval':np.array(zval_all),
+                   'sfh_tuple':np.array(sfh_tuple_all),
+                   'norm':np.array(norm_all), 'norm_method':norm_method,
+                   'mstar':np.array(mstar_all), 'sfr':np.array(sfr_all),
+                   'dust':np.array(dust_all), 'met':np.array(met_all),
+                   'sed':np.array(sed_all)}
 
     if store == True:
-        pregrid_mdict = {'rand_sfh_tuples':rand_sfh_tuples, 'rand_Z':rand_Z, 'rand_Av':rand_Av, 'rand_z':rand_z, 'rand_seds':rand_seds, 'norm_method':norm_method, 'rand_norm_facs':rand_norm_facs}
+
         if fname is None:
             fname = 'sfh_pregrid_size'
         if os.path.exists(path):
-            print('Path exists. Saved atlas at : '+path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat')
+            print('Path exists. Saved atlas at : '+path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.dbatlas')
         else:
             os.mkdir(path)
-            print('Created directory and saved atlas at : '+path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat')
-        sio.savemat(path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.mat', mdict = pregrid_mdict)
+            print('Created directory and saved atlas at : '+path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.dbatlas')
+        hickle.dump(pregrid_dict,
+                    path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.dbatlas',
+                    compression='gzip', compression_opts = 9)
         return
 
-    return rand_sfh_tuples, rand_Z, rand_Av, rand_z, rand_seds, norm_method
+    return pregrid_dict
 
 def load_atlas(fname, N_pregrid, N_param, path = 'pregrids/'):
-    if path == 'internal':
-        fname = fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
-        fname_full = get_file('pregrids', fname)
-    else:
-        # add unit test here to check for valid paths..
-        fname_full = path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
-    cat = sio.loadmat(fname_full)
-    sfh_tuples = cat['rand_sfh_tuples']
-    Av = cat['rand_Av'].ravel()
-    Z = cat['rand_Z'].ravel()
-    z = cat['rand_z'].ravel()
-    seds = cat['rand_seds']
-    # free SED normalization for easy mass and SFR fits
-    norm_method = cat['norm_method']
 
-    return sfh_tuples, Z, Av, z, seds, norm_method
+    fname_full = path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.dbatlas'
+    cat = hickle.load(fname_full)
+    return cat
 
 def quantile_names(N_params):
     return (np.round(np.linspace(0,100,N_params+2)))[1:-1]

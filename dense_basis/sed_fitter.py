@@ -10,8 +10,162 @@ from .priors import *
 from .gp_sfh import *
 from .plotter import *
 
-def fit_sed_pregrid(sed, sed_err, pg_theta, fit_mask = [True], fit_method = 'chi2', norm_method = 'none', return_val = 'params', make_posterior_plots = False, make_sed_plot = False, truths = [np.nan], zbest = None, deltaz = None):
+def normerr(nf, pg_seds, sed, sed_err, fit_mask):
+    c2v = np.amin(np.mean((pg_seds[fit_mask,0:] - sed.reshape(-1,1)/nf)**2 / (sed_err.reshape(-1,1)/nf)**2, 0))
+    return c2v
 
+def evaluate_sed_likelihood(sed, sed_err, atlas, fit_mask = [], zbest = None, deltaz = None):
+
+    """
+    Evaluate the likeihood of model SEDs in an atlas given
+    an observed SED with uncertainties.
+    """
+
+    # preprocessing:
+    if len(fit_mask) == len(sed):
+        fit_mask = fit_mask & (sed > 0)
+    else:
+        fit_mask = (sed > 0)
+
+    if len(sed) != len(sed_err):
+        raise ValueError('SED uncertainty array does not match SED')
+
+    sed = sed[fit_mask]
+    sed_err = sed_err[fit_mask]
+    pg_seds = atlas['sed'].copy().T
+
+    nfmin = minimize(normerr, np.nanmedian(sed), args = (pg_seds, sed, sed_err, fit_mask))
+    norm_fac = nfmin['x'][0]
+
+    sed_normed = sed.reshape(-1,1)/norm_fac
+    sed_err_normed = sed_err.reshape(-1,1)/norm_fac
+
+    chi2 = np.mean((pg_seds[fit_mask,0:] - sed_normed)**2 / (sed_err_normed)**2, 0)
+
+    if zbest is not None:
+        pg_z = atlas['zval']
+        #redshift_mask = (np.abs(pg_z - zbest) > 0.1*zbest)
+        redshift_mask = (np.abs(pg_z - zbest) > deltaz)
+        chi2[redshift_mask] = np.amax(chi2)+1e3
+
+    return chi2, norm_fac
+
+def get_quants(chi2_array, cat, norm_fac, bw_dex = 0.001, return_uncert = True, vb = False):
+
+    """
+    remember to check bin limits and widths before using quantities if you're fitting a new sample
+    """
+
+    #relprob = np.exp(-(chi2_array*np.sum(obs_sed>0))/2)
+    relprob = np.exp(-(chi2_array)/2)
+    if vb == True:
+        plt.hist(relprob,100)
+        plt.yscale('log')
+        plt.show()
+
+
+    # ---------------- stellar mass and SFR -----------------------------------
+
+    mstar_vals = calc_percentiles(cat['mstar'] + np.log10(norm_fac),
+                                 weights = relprob,
+                                 bins = np.arange(4,14,bw_dex),
+                                 percentile_values= [50.,16.,84.], vb=vb)
+
+    sfr_vals = calc_percentiles(cat['sfr'] + np.log10(norm_fac),
+                                 weights = relprob,
+                                 bins = np.arange(-6,4,bw_dex),
+                                 percentile_values= [50.,16.,84.],vb=vb)
+
+     # ---------------- SFH -----------------------------------
+
+    sfh_tuple_vals = np.zeros((3, cat['sfh_tuple'].shape[1]))
+
+    for i in range(cat['sfh_tuple'].shape[1]):
+
+        if i == 0:
+            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple'][0:,0] + np.log10(norm_fac),
+                                 weights = relprob, bins = np.arange(4,14,bw_dex),
+                                 percentile_values= [50.,16.,84.], vb=vb)
+        elif i == 1:
+            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple'][0:,1] + np.log10(norm_fac),
+                                 weights = relprob, bins = np.arange(-6,4,bw_dex),
+                                 percentile_values= [50.,16.,84.], vb=vb)
+        elif i == 2:
+            sfh_tuple_vals[0:,i] = sfh_tuple_vals[0:,i] + np.nanmean(cat['sfh_tuple'][0:,2])
+        else:
+            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple'][0:,1],
+                                 weights = relprob, bins = np.arange(0,1,bw_dex),
+                                 percentile_values= [50.,16.,84.], vb=vb)
+
+    # ------------------------ dust, metallicity, redshift ----------------------
+
+    Av_vals = calc_percentiles(cat['dust'].ravel(),
+                                 weights = relprob,
+                                 bins = np.arange(0,np.amax(cat['dust']),bw_dex),
+                                 percentile_values= [50.,16.,84.],vb=vb)
+
+    Z_vals = calc_percentiles(cat['met'].ravel(),
+                                 weights = relprob,
+                                 bins = np.arange(-1.5, 0.5,bw_dex),
+                                 percentile_values= [50.,16.,84.],vb=vb)
+
+    z_vals = calc_percentiles(cat['zval'].ravel(),
+                                 weights = relprob,
+                                 bins = np.arange(np.amin(cat['zval']), np.amax(cat['zval']),bw_dex),
+                                 percentile_values= [50.,16.,84.],vb=vb)
+
+    return [mstar_vals, sfr_vals, Av_vals, Z_vals, z_vals, sfh_tuple_vals]
+
+def get_flat_posterior(qty, weights, bins):
+
+    post, xaxis = np.histogram(qty, weights=weights, bins=bins)
+    prior, xaxis = np.histogram(qty, bins=bins)
+
+#     post_weighted = post/prior
+    post_weighted = post
+    post_weighted[np.isnan(post_weighted)] = 0
+
+    return post_weighted, xaxis
+
+def calc_percentiles(qty, weights, bins, percentile_values, vb = False):
+
+    qty_percentile_values = np.zeros((len(percentile_values),))
+
+    post_weighted, xaxis = get_flat_posterior(qty, weights, bins)
+    bw = np.nanmean(np.diff(xaxis))
+
+    normed_cdf = np.cumsum(post_weighted)/np.amax(np.cumsum(post_weighted))
+
+    for i in range(len(percentile_values)):
+        qty_percentile_values[i] = xaxis[0:-1][np.argmin(np.abs(normed_cdf - percentile_values[i]/100))] + bw/2
+        if (qty_percentile_values[i] == xaxis[0]+bw/2) or (qty_percentile_values[i] == xaxis[-1]+bw/2):
+            qty_percentile_values[i] = np.nan
+
+    if vb == True:
+
+        qty_50 = xaxis[0:-1][np.argmin(np.abs(normed_cdf - 0.5))] + bw/2
+        qty_16 = xaxis[0:-1][np.argmin(np.abs(normed_cdf - 0.16))] + bw/2
+        qty_84 = xaxis[0:-1][np.argmin(np.abs(normed_cdf - 0.84))] + bw/2
+
+        plt.plot(xaxis[0:-1]+bw/2, post_weighted)
+        bf_value = qty[np.argmax(weights)]
+        tempy = plt.ylim()
+        plt.plot([bf_value, bf_value],[0,tempy[1]],'k-',label='best-fit')
+        plt.plot([qty_50, qty_50],[0,tempy[1]],'-',label='50th percentile')
+        plt.plot([qty_16, qty_16],[0,tempy[1]],'-',label='16th percentile')
+        plt.plot([qty_84, qty_84],[0,tempy[1]],'-',label='84th percentile')
+        print(bf_value, qty_50, np.argmax(weights), np.amax(weights))
+        plt.legend(edgecolor='w',fontsize=14)
+        plt.show()
+
+    return qty_percentile_values
+
+
+
+def fit_sed_pregrid_old(sed, sed_err, pg_theta, fit_mask = [True], fit_method = 'chi2', norm_method = 'none', return_val = 'params', make_posterior_plots = False, make_sed_plot = False, truths = [np.nan], zbest = None, deltaz = None):
+    """
+    DEPRECATED
+    """
     # preprocessing:
     if len(fit_mask) == len(sed):
         fit_mask = fit_mask & (sed > 0)
@@ -116,10 +270,11 @@ def fit_sed_pregrid(sed, sed_err, pg_theta, fit_mask = [True], fit_method = 'chi
         print('unknown fit_method - use chi2 or dot.')
         return 0
 
-
-
-
 def get_sfr_mstar(chi2_array, pg_theta, obs_sed, bw_dex = 0.01, return_uncert = True):
+    """
+    DEPRECATED
+    """
+
 
     a,b = np.histogram(pg_theta[0][0,0:] + np.log10(np.amax(obs_sed)),
                        weights = np.exp(-chi2_array/2),
@@ -141,6 +296,9 @@ def get_sfr_mstar(chi2_array, pg_theta, obs_sed, bw_dex = 0.01, return_uncert = 
         return [mstar_50, mstar_16, mstar_84], [sfr_50, sfr_16, sfr_84]
 
 def calculate_50_16_84_params(chi2, nbands, params, norm_fac, nbins = 30, return_posterior = False):
+    """
+    DEPRECATED
+    """
 
     relprob = -0.5*chi2
     relprob = relprob - np.amax(relprob)

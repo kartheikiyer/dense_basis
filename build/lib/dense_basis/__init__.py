@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-__version__ = "0.1.2"
+__version__ = "0.1.4"
 __bibtex__ = """
 @article{iyer2019non,
   title={Non-parametric Star Formation History Reconstruction with Gaussian Processes I: Counting Major Episodes of Star Formation},
@@ -14,7 +14,7 @@ __bibtex__ = """
 # from . import pregrids
 # from . import filters
 
-print('Starting dense_basis. please wait ~ a minute for the FSPS backend to initialize.')
+#print('Starting dense_basis. please wait ~ a minute for the FSPS backend to initialize.')
 
 from .priors import *
 from .gp_sfh import *
