@@ -339,8 +339,8 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         sp.params['imf_type'] = 1 # Chabrier
         sp.params['zred'] = zval
 
-        lam, spec = sp.get_spectrum(tage = cosmo.age(zval).value)
-        spec_ujy = convert_to_microjansky(spec, zval, cosmo)
+        lam, spec = sp.get_spectrum(tage = cosmology.age(zval).value)
+        spec_ujy = convert_to_microjansky(spec, zval, cosmology)
 
         if i == 0:
             # make grid of filter transmission curves for faster computation
