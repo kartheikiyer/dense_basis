@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: dense-basis
-Version: 0.1.4
+Version: 0.1.5
 Summary: SED fitting with non-parametric star formation histories
 Home-page: https://github.com/kartheikiyer/dense_basis
 Author: Kartheik Iyer
@@ -29,6 +29,9 @@ Description: # Dense Basis SED fitting
         
         
         ### Changelog
+        
+        v.0.1.5
+        - added basic MCMC support with emcee in the main repo instead of dense_basis_toolbelt
         
         v.0.1.4
         - The FSPS/python-FSPS requirement is no longer necessary, if a user requires only the GP-SFH module.

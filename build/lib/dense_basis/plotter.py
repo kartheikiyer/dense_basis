@@ -6,7 +6,7 @@ import seaborn as sns
 
 from pylab import *
 
-from .pre_grid import make_filvalkit_simple
+from .pre_grid import make_filvalkit_simple, load_atlas
 from .gp_sfh import *
 
 def set_plot_style():
@@ -122,18 +122,14 @@ def plot_posteriors(chi2_array, norm_fac, sed, atlas, truths = []):
 def plot_priors(fname, N_pregrid, N_param, dir = 'pregrids/'):
     set_plot_style()
 
-    if dir == 'internal':
-        cat = sio.loadmat(get_file('pregrids',fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'))
-    else:
-        fname_full = 'dir'+fname+'_'+str(N_pregrid)+'_Nparam_'+str(N_param)+'.mat'
-        cat = sio.loadmat(fname_full)
-    sfh_tuples = cat['rand_sfh_tuples']
-    Av = cat['rand_Av'].ravel()
-    Z = cat['rand_Z'].ravel()
-    z = cat['rand_z'].ravel()
-    seds = cat['rand_seds']
+    cat = load_atlas(fname, N_pregrid, N_param, path = dir)
+    sfh_tuples = cat['sfh_tuple']
+    Av = cat['dust'].ravel()
+    Z = cat['met'].ravel()
+    z = cat['zval'].ravel()
+    seds = cat['sed']
     norm_method = cat['norm_method']
-    norm_facs = cat['rand_norm_facs'].ravel()
+    norm_facs = cat['norm'].ravel()
 
     pg_theta = [sfh_tuples, Z, Av, z, seds]
     pg_params = np.vstack([pg_theta[0][0,0:], pg_theta[0][1,0:], pg_theta[0][3:,0:], pg_theta[1], pg_theta[2], pg_theta[3]])

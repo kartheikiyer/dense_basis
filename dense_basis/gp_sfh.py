@@ -122,7 +122,7 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
 
     # SFR constrained to SFR_inst at the time of observation
     #SFH_constraint_percentiles = np.array([0.96,0.97,0.98,0.99])
-    SFH_constraint_percentiles = np.array([0.98,0.99])
+    SFH_constraint_percentiles = np.array([0.97,0.98,0.99])
     for const_vals in SFH_constraint_percentiles:
 
         delta_mstar = 10**(sfh_tuple[0]) *(1-const_vals)

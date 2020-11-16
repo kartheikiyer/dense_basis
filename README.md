@@ -22,6 +22,9 @@ Contact:
 
 ### Changelog
 
+v.0.1.5
+- added basic MCMC support with emcee in the main repo instead of dense_basis_toolbelt
+
 v.0.1.4
 - The FSPS/python-FSPS requirement is no longer necessary, if a user requires only the GP-SFH module.
 - added more options to SFR sampling - flat in SFR, sSFR or lognormal in sSFR. removed the separate sample_sSFR_prior option

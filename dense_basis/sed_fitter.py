@@ -63,7 +63,6 @@ def get_quants(chi2_array, cat, norm_fac, bw_dex = 0.001, return_uncert = True, 
         plt.yscale('log')
         plt.show()
 
-
     # ---------------- stellar mass and SFR -----------------------------------
 
     mstar_vals = calc_percentiles(cat['mstar'] + np.log10(norm_fac),
@@ -93,7 +92,7 @@ def get_quants(chi2_array, cat, norm_fac, bw_dex = 0.001, return_uncert = True, 
         elif i == 2:
             sfh_tuple_vals[0:,i] = sfh_tuple_vals[0:,i] + np.nanmean(cat['sfh_tuple'][0:,2])
         else:
-            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple'][0:,1],
+            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple'][0:,i],
                                  weights = relprob, bins = np.arange(0,1,bw_dex),
                                  percentile_values= [50.,16.,84.], vb=vb)
 

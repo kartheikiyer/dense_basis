@@ -4,6 +4,7 @@ import scipy.io as sio
 
 try:
     import emcee
+    from scipy.interpolate import NearestNDInterpolator
 except:
     print('running without emcee')
 
@@ -67,7 +68,7 @@ def run_emceesampler(gal_sed, gal_err, atlas, fit_mask=[], zbest=None, deltaz=No
     pos[pos[0:,1]<-2,1] = -2
     _, ndim = pos.shape
 
-    _, norm_fac = db.evaluate_sed_likelihood(gal_sed,gal_err,atlas,fit_mask=[],
+    _, norm_fac = evaluate_sed_likelihood(gal_sed,gal_err,atlas,fit_mask=[],
                                             zbest=None,deltaz=None)
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability,
