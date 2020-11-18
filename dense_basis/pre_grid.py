@@ -314,7 +314,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
 
     Nparam = priors.Nparam
 
-    for i in tqdm(range(N_pregrid)):
+    for i in tqdm(range(int(N_pregrid))):
 
         zval = priors.sample_z_prior()
 
