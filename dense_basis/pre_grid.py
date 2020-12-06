@@ -409,9 +409,15 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         else:
             os.mkdir(path)
             print('Created directory and saved atlas at : '+path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.dbatlas')
-        hickle.dump(pregrid_dict,
-                    path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.dbatlas',
-                    compression='gzip', compression_opts = 9)
+        try:
+            hickle.dump(pregrid_dict,
+                        path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.dbatlas',
+                        compression='gzip', compression_opts = 9)
+        except:
+            print('storing without compression')
+            hickle.dump(pregrid_dict,
+                        path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.dbatlas')
+            
         return
 
     return pregrid_dict
