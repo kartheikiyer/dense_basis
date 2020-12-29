@@ -22,6 +22,15 @@ Contact:
 
 ### Changelog
 
+v.0.1.7
+- added arguments in makespec() to return spectra splined to an input wavelength array
+
+v.0.1.6
+- added a class for the SED fitter
+- added the plot_atlas_priors() function
+- overhauled atlas generation with the makespec() function for self-consistency
+- added some bugfixes to the gp_sfh module for high sSFR values
+
 v.0.1.5
 - added basic MCMC support with emcee in the main repo instead of dense_basis_toolbelt
 

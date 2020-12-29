@@ -10,6 +10,74 @@ from .priors import *
 from .gp_sfh import *
 from .plotter import *
 
+class SedFit(object):
+    """
+    Class to incorporate SED likelihood evaluation and resulting posteriors
+    
+    Attributes
+    ----------
+    mass : log stellar mass
+        upper and lower limits of distribution
+    sfr : log instantaneous SFR
+        upper and lower limits of distribution
+    ssfr : log specific SFR = SFR/M*
+        negative lognormal distribution parameters
+    tx : lookback times at which a galaxy formed certain fractions of its mass
+        concentration (tx_alpha) and number of parameters (Nparam) of distribution
+    Z  : log metallicity/solar
+        upper and lower limits of distribution
+    Av : calzetti dust attenuation
+        upper and lower limits of distribution
+    z  : redshift
+        upper and lower limits of distribution
+
+    Methods
+    -------
+    method: what it does
+    """
+    
+    def __init__(self, sed, sed_err, atlas, fit_mask = [], zbest = None, deltaz = None):
+        
+        self.sed = sed
+        self.sed_err = sed_err
+        self.atlas = atlas
+        self.fit_mask = fit_mask
+        self.zbest = zbest
+        self.deltaz = deltaz
+        
+    def evaluate_likelihood(self):
+        
+        chi2_array, norm_fac = evaluate_sed_likelihood(self.sed, self.sed_err, self.atlas, self.fit_mask, self.zbest, self.deltaz)
+        self.chi2_array = chi2_array
+        self.norm_fac = norm_fac
+        self.likelihood = np.exp(-(chi2_array)/2)
+        
+        return
+    
+    def evaluate_posterior_percentiles(self, bw_dex = 0.001, percentile_values = [50.,16.,84.], vb = False):
+        """
+        by default, the percentile values are median, lower68, upper68. 
+        change this to whatever the desired sampling of the posterior is.
+        """
+        
+        quants = get_quants(self.chi2_array, self.atlas, self.norm_fac, bw_dex = bw_dex, percentile_values = percentile_values, vb = vb)
+        
+        self.mstar = quants[0]
+        self.sfr = quants[1]
+        self.Av = quants[2]
+        self.Z = quants[3]
+        self.z = quants[4]
+        self.sfh_tuple = quants[5]
+        self.percentile_values = percentile_values
+        
+        return 
+    
+    def plot_posteriors(self,truths = []):
+        
+        plot_posteriors(self.chi2_array, self.norm_fac, self.sed, self.atlas, truths = truths)
+        return
+    
+
 def normerr(nf, pg_seds, sed, sed_err, fit_mask):
     c2v = np.amin(np.mean((pg_seds[fit_mask,0:] - sed.reshape(-1,1)/nf)**2 / (sed_err.reshape(-1,1)/nf)**2, 0))
     return c2v
@@ -50,7 +118,17 @@ def evaluate_sed_likelihood(sed, sed_err, atlas, fit_mask = [], zbest = None, de
 
     return chi2, norm_fac
 
-def get_quants(chi2_array, cat, norm_fac, bw_dex = 0.001, return_uncert = True, vb = False):
+def get_quants_key(key, bins, chi2_array, cat, norm_fac, percentile_values = [50.,16.,84.], return_uncert = True, vb = False):
+    """
+    Get posterior percentiles for an input key
+    """
+    relprob = np.exp(-(chi2_array)/2)    
+    key_vals = calc_percentiles(cat[key], weights = relprob, bins = bins, percentile_values = percentile_values, vb = vb)
+        
+    return key_vals
+    
+
+def get_quants(chi2_array, cat, norm_fac, bw_dex = 0.001, percentile_values = [50.,16.,84.], vb = False):
 
     """
     remember to check bin limits and widths before using quantities if you're fitting a new sample
@@ -68,50 +146,50 @@ def get_quants(chi2_array, cat, norm_fac, bw_dex = 0.001, return_uncert = True, 
     mstar_vals = calc_percentiles(cat['mstar'] + np.log10(norm_fac),
                                  weights = relprob,
                                  bins = np.arange(4,14,bw_dex),
-                                 percentile_values= [50.,16.,84.], vb=vb)
+                                 percentile_values = percentile_values, vb=vb)
 
     sfr_vals = calc_percentiles(cat['sfr'] + np.log10(norm_fac),
                                  weights = relprob,
                                  bins = np.arange(-6,4,bw_dex),
-                                 percentile_values= [50.,16.,84.],vb=vb)
+                                 percentile_values = percentile_values,vb=vb)
 
      # ---------------- SFH -----------------------------------
 
-    sfh_tuple_vals = np.zeros((3, cat['sfh_tuple'].shape[1]))
+    sfh_tuple_vals = np.zeros((3, cat['sfh_tuple_rec'].shape[1]))
 
-    for i in range(cat['sfh_tuple'].shape[1]):
+    for i in range(cat['sfh_tuple_rec'].shape[1]):
 
         if i == 0:
-            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple'][0:,0] + np.log10(norm_fac),
+            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple_rec'][0:,0] + np.log10(norm_fac),
                                  weights = relprob, bins = np.arange(4,14,bw_dex),
-                                 percentile_values= [50.,16.,84.], vb=vb)
+                                 percentile_values = percentile_values, vb=vb)
         elif i == 1:
-            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple'][0:,1] + np.log10(norm_fac),
+            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple_rec'][0:,1] + np.log10(norm_fac),
                                  weights = relprob, bins = np.arange(-6,4,bw_dex),
-                                 percentile_values= [50.,16.,84.], vb=vb)
+                                 percentile_values = percentile_values, vb=vb)
         elif i == 2:
-            sfh_tuple_vals[0:,i] = sfh_tuple_vals[0:,i] + np.nanmean(cat['sfh_tuple'][0:,2])
+            sfh_tuple_vals[0:,i] = sfh_tuple_vals[0:,i] + np.nanmean(cat['sfh_tuple_rec'][0:,2])
         else:
-            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple'][0:,i],
+            sfh_tuple_vals[0:,i] = calc_percentiles(cat['sfh_tuple_rec'][0:,i],
                                  weights = relprob, bins = np.arange(0,1,bw_dex),
-                                 percentile_values= [50.,16.,84.], vb=vb)
+                                 percentile_values = percentile_values, vb=vb)
 
     # ------------------------ dust, metallicity, redshift ----------------------
 
     Av_vals = calc_percentiles(cat['dust'].ravel(),
                                  weights = relprob,
                                  bins = np.arange(0,np.amax(cat['dust']),bw_dex),
-                                 percentile_values= [50.,16.,84.],vb=vb)
+                                 percentile_values = percentile_values,vb=vb)
 
     Z_vals = calc_percentiles(cat['met'].ravel(),
                                  weights = relprob,
                                  bins = np.arange(-1.5, 0.5,bw_dex),
-                                 percentile_values= [50.,16.,84.],vb=vb)
+                                 percentile_values = percentile_values,vb=vb)
 
     z_vals = calc_percentiles(cat['zval'].ravel(),
                                  weights = relprob,
                                  bins = np.arange(np.amin(cat['zval']), np.amax(cat['zval']),bw_dex),
-                                 percentile_values= [50.,16.,84.],vb=vb)
+                                 percentile_values = percentile_values,vb=vb)
 
     return [mstar_vals, sfr_vals, Av_vals, Z_vals, z_vals, sfh_tuple_vals]
 

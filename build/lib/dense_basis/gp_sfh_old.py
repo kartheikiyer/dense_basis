@@ -464,3 +464,71 @@ def correct_for_mass_loss(sfh, time, mass_loss_curve_time, mass_loss_curve):
     correction_factors = np.interp(time, mass_loss_curve_time, mass_loss_curve)
     return sfh * correction_factors
 
+def tuple_to_sfh_old_dec11(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = False, decouple_sfr_time = 10, vb = False,cosmo = cosmo):
+    # generate an SFH from an input tuple (Mass, SFR, {tx}) at a specified redshift
+
+
+    Nparam = int(sfh_tuple[2])
+    mass_quantiles = np.linspace(0,1,Nparam+2)
+    time_quantiles = np.zeros_like(mass_quantiles)
+    time_quantiles[-1] = 1
+    time_quantiles[1:-1] = sfh_tuple[3:]
+
+    # now add SFR constraints
+
+    # SFR smoothly increasing from 0 at the big bang
+    mass_quantiles = np.insert(mass_quantiles,1,[0.00])
+    time_quantiles = np.insert(time_quantiles,1,[0.01])
+
+    # SFR constrained to SFR_inst at the time of observation
+    SFH_constraint_percentiles = np.array([0.96,0.97,0.98,0.99])
+    #SFH_constraint_percentiles = np.array([0.97,0.98,0.99])
+    for const_vals in SFH_constraint_percentiles:
+
+        delta_mstar = 10**(sfh_tuple[0]) *(1-const_vals)
+        delta_t = 1 - delta_mstar/(10**sfh_tuple[1])/(cosmo.age(zval).value*1e9)
+
+        if (delta_t > time_quantiles[-2]) & (delta_t > 0.9):
+            mass_quantiles = np.insert(mass_quantiles, -1, [const_vals], )
+            time_quantiles = np.insert(time_quantiles, -1, [delta_t],)
+        else:
+            delta_m = 1 - ((cosmo.age(zval).value*1e9)*(1-const_vals)*(10**sfh_tuple[1]))/(10**sfh_tuple[0])
+            time_quantiles = np.insert(time_quantiles, -1, [const_vals])
+            mass_quantiles=  np.insert(mass_quantiles, -1, [delta_m])
+
+    if interpolator == 'gp_george':
+        time_arr_interp, mass_arr_interp = gp_interpolator(time_quantiles, mass_quantiles, Nparam = int(Nparam), decouple_sfr = decouple_sfr)
+    elif interpolator == 'gp_sklearn':
+        time_arr_interp, mass_arr_interp = gp_sklearn_interpolator(time_quantiles, mass_quantiles)
+    elif interpolator == 'linear':
+        time_arr_interp, mass_arr_interp = linear_interpolator(time_quantiles, mass_quantiles)
+    elif interpolator == 'pchip':
+        time_arr_interp, mass_arr_interp = Pchip_interpolator(time_quantiles, mass_quantiles)
+    else:
+        raise Exception('specified interpolator does not exist: {}. \n use one of the following: gp_george, gp_sklearn, linear, and pchip '.format(interpolator))
+
+    sfh_scale = 10**(sfh_tuple[0])/(cosmo.age(zval).value*1e9/1000)
+    sfh = np.diff(mass_arr_interp)*sfh_scale
+    sfh[sfh<0] = 0
+    sfh = np.insert(sfh,0,[0])
+    if decouple_sfr == True:
+        sfr_decouple_time_index = np.argmin(np.abs(time_arr_interp*cosmo.age(zval).value - decouple_sfr_time/1e3))
+        sfh[-sfr_decouple_time_index:] = 10**sfh_tuple[1]
+
+    timeax = time_arr_interp * cosmo.age(zval).value
+
+    if vb == True:
+        print('time and mass quantiles:')
+        print(time_quantiles, mass_quantiles)
+        plt.plot(time_quantiles, mass_quantiles,'--o')
+        plt.plot(time_arr_interp, mass_arr_interp)
+        plt.axis([0,1,0,1])
+        #plt.axis([0.9,1.05,0.9,1.05])
+        plt.show()
+
+        print('instantaneous SFR: %.1f' %sfh[-1])
+        plt.plot(np.amax(time_arr_interp) - time_arr_interp, sfh)
+        #plt.xscale('log')
+        plt.show()
+
+    return sfh, timeax

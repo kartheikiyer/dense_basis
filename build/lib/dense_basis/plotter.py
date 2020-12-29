@@ -82,6 +82,34 @@ def plot_filterset(filter_list = 'filter_list_goodss.dat', filt_dir = 'filters/'
 def quantile_names(N_params):
     return (np.round(np.linspace(0,100,N_params+2)))[1:-1]
 
+def plot_atlas_priors(atlas):
+    
+    mass_unnormed = np.log10(10**atlas['mstar'] / atlas['norm'])
+    sfr_unnormed = np.log10(10**atlas['sfr'] / atlas['norm'])
+    ssfr = sfr_unnormed - mass_unnormed
+    txs = atlas['sfh_tuple_rec'][0:,3:]
+
+    dust = atlas['dust'].ravel()
+    met = atlas['met'].ravel()
+    zval = atlas['zval'].ravel()
+    quants = np.vstack((mass_unnormed, sfr_unnormed, ssfr, txs.T, met, dust, zval)).T
+
+    txs = ['t'+'%.0f' %i for i in quantile_names(txs.shape[1])]
+    pg_labels = ['log M*', 'log SFR', 'log sSFR', 'Z', 'Av', 'z']
+    pg_labels[3:3] = txs
+
+    figure = corner.corner(quants,plot_datapoints=False, fill_contours=True,labels=pg_labels,
+                                    bins=20, smooth=1.0,
+                                    quantiles=(0.16, 0.84), 
+                                    levels=[1 - np.exp(-(1/1)**2/2),1 - np.exp(-(2/1)**2/2)],
+                                    label_kwargs={"fontsize": 30})
+    figure.subplots_adjust(right=1.5,top=1.5)
+
+    plt.show()
+    
+    return
+
+
 
 def plot_posteriors(chi2_array, norm_fac, sed, atlas, truths = []):
     set_plot_style()

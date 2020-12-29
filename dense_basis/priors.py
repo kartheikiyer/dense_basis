@@ -60,8 +60,8 @@ class Priors(object):
         self.sfr_prior_type = 'sSFRflat' # options are SFRflat, sSFRflat, sSFRlognormal
         self.sfr_max = -1.0
         self.sfr_min = 2.0
-        self.ssfr_min = -11.0
-        self.ssfr_max = -7.0
+        self.ssfr_min = -12.0
+        self.ssfr_max = -7.5
         self.ssfr_mean = 0.6
         self.ssfr_sigma = 0.4 # roughly ~2.5 dex width, use 0.1 for a tighter correlation
         self.ssfr_shift = 9.0
@@ -100,7 +100,7 @@ class Priors(object):
         elif self.sfr_prior_type == 'sSFRlognormal':
             temp = np.random.lognormal(mean = self.ssfr_mean, sigma = self.ssfr_shift, size=size) # about a ~2.5 dex width.
             temp = temp - np.nanmedian(temp)
-            temp = np.log10(10.0/(db.cosmo.age(zval).value*1e9))-temp
+            temp = np.log10(10.0/(cosmo.age(zval).value*1e9))-temp
             sfrval = temp + self.massval
             return sfrval
         else:

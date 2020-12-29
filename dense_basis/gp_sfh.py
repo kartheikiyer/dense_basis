@@ -37,18 +37,23 @@ old_very_quenched_sfh = np.array([10.0,-10.0,3,0.1,0.2,0.4])
 double_peaked_SF_sfh = np.array([10.0,0.5,3,0.25,0.4,0.7])
 double_peaked_Q_sfh = np.array([10.0,-1.0,3,0.2,0.4,0.8])
 
-# functions:
-def neg_ln_like(p, gp, y):
-    gp.set_parameter_vector(p)
-    return -gp.log_likelihood(y)
-
-def grad_neg_ln_like(p, gp, y):
-    gp.set_parameter_vector(p)
-    return -gp.grad_log_likelihood(y)
 
 def correct_for_mass_loss(sfh, time, mass_loss_curve_time, mass_loss_curve):
     correction_factors = np.interp(time, mass_loss_curve_time, mass_loss_curve)
     return sfh * correction_factors
+
+# functions:
+def nll(p, gp, y):
+    gp.set_parameter_vector(p)
+    ll = gp.log_likelihood(y, quiet=True)
+    return -ll if np.isfinite(ll) else 1e25
+
+def grad_nll(p, gp, y):
+    gp.set_parameter_vector(p)
+    return -gp.grad_log_likelihood(y, quiet=True)
+
+#--------------------------------------------
+
 
 def gp_interpolator(x,y,res = 1000, Nparam = 3, decouple_sfr = False):
 
@@ -56,20 +61,25 @@ def gp_interpolator(x,y,res = 1000, Nparam = 3, decouple_sfr = False):
     yerr[2:(2+Nparam)] = 0.001/np.sqrt(Nparam)
     if len(yerr) > 26:
         yerr[2:(2+Nparam)] = 0.1/np.sqrt(Nparam)
-
-    if decouple_sfr == True:
-        yerr[-2:] = 0.1/np.sqrt(Nparam)
-    else:
-        yerr[-2:] = 0.01/np.sqrt(Nparam)
+    yerr[(2+Nparam):] = 0.1
+    #if decouple_sfr == True:
+    #    yerr[-2:] = 0.1/np.sqrt(Nparam)
+    #else:
+    #    yerr[-2:] = 0.01/np.sqrt(Nparam)
 
     #kernel = np.var(yax) * kernels.ExpSquaredKernel(np.median(yax)+np.std(yax))
     #k2 = np.var(yax) * kernels.LinearKernel(np.median(yax),order=1)
     #kernel = np.var(y) * kernels.Matern32Kernel(np.median(y)) #+ k2
     kernel = np.var(y) * (kernels.Matern32Kernel(np.median(y)) + kernels.LinearKernel(np.median(y), order=2))
-    gp = george.GP(kernel)
+    gp = george.GP(kernel, solver=george.HODLRSolver)
 
     #print(xax.shape, yerr.shape)
     gp.compute(x.ravel(), yerr.ravel())
+    
+    # optimize kernel parameters
+#     p0 = gp.get_parameter_vector()
+#     results = minimize(nll, p0, jac=grad_nll, method="L-BFGS-B", args = (gp, y))
+#     gp.set_parameter_vector(results.x)
 
     x_pred = np.linspace(np.amin(x), np.amax(x), res)
     y_pred, pred_var = gp.predict(y.ravel(), x_pred, return_var=True)
@@ -104,7 +114,8 @@ def Pchip_interpolator(x,y,res = 1000):
 
     return x_pred, y_pred
 
-def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = False, decouple_sfr_time = 10, vb = False,cosmo = cosmo):
+
+def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = False, decouple_sfr_time = 5, sfr_tolerance = 0.05, vb = False,cosmo = cosmo):
     # generate an SFH from an input tuple (Mass, SFR, {tx}) at a specified redshift
 
 
@@ -122,7 +133,7 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
 
     # SFR constrained to SFR_inst at the time of observation
     #SFH_constraint_percentiles = np.array([0.96,0.97,0.98,0.99])
-    SFH_constraint_percentiles = np.array([0.97,0.98,0.99])
+    SFH_constraint_percentiles = np.array([0.97, 0.98, 0.99])
     for const_vals in SFH_constraint_percentiles:
 
         delta_mstar = 10**(sfh_tuple[0]) *(1-const_vals)
@@ -151,9 +162,22 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
     sfh = np.diff(mass_arr_interp)*sfh_scale
     sfh[sfh<0] = 0
     sfh = np.insert(sfh,0,[0])
-    if decouple_sfr == True:
-        sfr_decouple_time_index = np.argmin(np.abs(time_arr_interp*cosmo.age(zval).value - decouple_sfr_time/1e3))
+    
+    sfr_decouple_time_index = np.argmin(np.abs(time_arr_interp*cosmo.age(zval).value - decouple_sfr_time/1e3))
+    mass_lastbins = np.trapz(x=time_arr_interp[-sfr_decouple_time_index:]*1e9*(cosmo.age(zval).value), y=sfh[-sfr_decouple_time_index:])
+    mass_remaining = 10**(sfh_tuple[0]) - mass_lastbins
+    if mass_remaining < 0:
+        mass_remaining = 0
+        print('input SFR, M* combination is not physically consistent (log M*: %.2f, log SFR: %.2f.)' %(sfh_tuple[0],sfh_tuple[1]))
+    mass_initbins = np.trapz(x=time_arr_interp[0:(1000-sfr_decouple_time_index)]*1e9*(cosmo.age(zval).value), y=sfh[0:(1000-sfr_decouple_time_index)])
+    sfh[0:(1000-sfr_decouple_time_index)] = sfh[0:(1000-sfr_decouple_time_index)] * mass_remaining / mass_initbins
+    
+    if (np.abs(np.log10(sfh[-1]) - sfh_tuple[1]) > sfr_tolerance) or (decouple_sfr == True):
         sfh[-sfr_decouple_time_index:] = 10**sfh_tuple[1]
+    
+#     if decouple_sfr == True:
+#         sfr_decouple_time_index = np.argmin(np.abs(time_arr_interp*cosmo.age(zval).value - decouple_sfr_time/1e3))
+#         sfh[-sfr_decouple_time_index:] = 10**sfh_tuple[1]
 
     timeax = time_arr_interp * cosmo.age(zval).value
 
@@ -188,6 +212,17 @@ def calctimes(timeax,sfh,nparams):
     sfr = np.log10(sfh[-1])
 
     return mass, sfr, tx/np.amax(timeax)
+
+def calctimes_to_tuple(calctimelist):
+    nparam = len(calctimelist[2])
+    
+    sfhtuple = []
+    sfhtuple.append(calctimelist[0])
+    sfhtuple.append(calctimelist[1])
+    sfhtuple.append(nparam)
+    for i in range(nparam):
+        sfhtuple.append(calctimelist[2][i])
+    return sfhtuple
 
 def scale_t50(t50_val = 1.0, zval = 1.0):
     """

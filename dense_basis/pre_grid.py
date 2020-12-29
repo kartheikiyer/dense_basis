@@ -44,50 +44,72 @@ def convert_to_microjansky(spec,z,cosmology):
     temp = (1+z)*spec *1e6 * 1e23*3.48e33/(4*np.pi*3.086e+24*3.086e+24*cosmo.luminosity_distance(z).value*cosmo.luminosity_distance(z).value)
     #temp = spec *1e6 * 1e23*3.48e33/(4*np.pi*3.086e+24*3.086e+24*cosmo.luminosity_distance(z).value*cosmo.luminosity_distance(z).value*(1+z))
     return temp
+    
+def makespec_atlas(atlas, galid, priors, sp, cosmo, filter_list = [], filt_dir = [], return_spec = False):
+    
+    sfh_tuple = atlas['sfh_tuple'][galid,0:]
+    zval = atlas['zval'][galid]
+    dust = atlas['dust'][galid]
+    met = atlas['met'][galid]
+    
+    specdetails = [sfh_tuple, dust, met, zval]
+    
+    output = makespec(specdetails, priors, sp, cosmo, filter_list, filt_dir, return_spec)
+    
+    return output
 
-def make_spec(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = False, return_ms = False, sp = mocksp, cosmology = cosmo):
-
-    """Use FSPS to generate a spectrum corresponding to a set of
-        input galaxy properties.
-        Args:
-            sfh_tuple[1d numpy array]: SFH parameters, input to gp_sfh_sklearn
-            metval[float]: log metallicity wrt Solar.
-            dustval[float]: Calzetti dust attenuation
-            zval[float]: redshift
-            igmval[float, optional]: Include IGM absorption (Default is True)
-            return_lam[boolean, optional]: Return a wavelength array along
-                with the spectrum (Default is True)
-            sp[stellar population object]: FSPS stellar population object.
-                Initialized previously for speed.
-            cosmo[astropy cosmology object]: cosmology.
-                Default is FlatLambdaCDM
-        Returns:
-            spec[1d numpy array]: Spectrum in F_\nu (\muJy)
-            lam[1d numpy array]: Wavelength in Angstrom corresponding to spectrum
-        """
-
-    sp.params['add_igm_absorption'] = igmval
-    sp.params['zred'] = zval
-    sfh, timeax = tuple_to_sfh(sfh_tuple, zval = zval)
-    timeax = timeax
+def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], return_spec = False, peraa = False):
+    
+    [sfh_tuple, dust, met, zval] = specdetails
+    sfh, timeax = tuple_to_sfh(sfh_tuple, zval, decouple_sfr = priors.decouple_sfr, decouple_sfr_time = priors.decouple_sfr_time)
     sp.params['sfh'] = 3
     sp.set_tabular_sfh(timeax, sfh)
+    
     sp.params['cloudy_dust'] = True
-    sp.params['dust_type'] = 2
+    # sp.params['dust_type'] = 2
     # sp.params['dust1'] = dust1_rand
-    sp.params['dust2'] = dustval
-    sp.params['logzsol'] = metval
-    [lam_arr,spec] = sp.get_spectrum(tage = np.amax(timeax))
-    spec_ujy = convert_to_microjansky(spec,zval,cosmology)
-
-    # add option to work in energy or F_\lambda as well
-
-    if return_ms == True:
-        return spec_ujy, np.log10(sfh[-1]), np.log10(sp.stellar_mass)
-    elif return_lam == True:
-        return spec_ujy, lam_arr
+    
+    sp.params['dust2'] = dust
+    sp.params['logzsol'] = met
+    sp.params['add_igm_absorption'] = True
+    sp.params['add_neb_emission'] = True
+    sp.params['add_neb_continuum'] = True
+    sp.params['imf_type'] = 1 # Chabrier
+    sp.params['zred'] = zval
+    
+    lam, spec = sp.get_spectrum(tage = cosmo.age(zval).value, peraa = peraa)
+    spec_ujy = convert_to_microjansky(spec, zval, cosmo)
+    
+    if type(return_spec) == type(True):
+        
+        if return_spec == True:
+            return lam, spec_ujy
+    
+        elif return_spec == False:
+            filcurves, _, _ = make_filvalkit_simple(lam, zval, fkit_name = filter_list, filt_dir = filt_dir)
+            sed = calc_fnu_sed_fast(spec_ujy, filcurves)
+            return sed
+    
+    elif len(return_spec) > 10:
+        return convert_to_splined_spec(spec, lam, return_spec, zval)
+    
     else:
-        return spec_ujy
+        raise('Unknown argument for return_spec. Use True or False, or pass a wavelength grid.')
+        
+    return 0
+
+def convert_to_splined_spec(spec_peraa, lam, lam_spline, redshift, cosmology = cosmo):
+    
+    spec = spec_peraa
+    spec_ergsec = spec*3.839e33*1e17/(1+redshift)
+    lum_dist = cosmology.luminosity_distance(redshift).value
+    spec_ergsec_cm2 = spec_ergsec/(4*np.pi*3.086e+24*3.086e+24*lum_dist*lum_dist)
+    # this should have units of 1e-17 erg/s/Ang
+    # need units to be flux in 1e-17 erg/s/cm^2/Ang/spaxel
+    spec_spline = np.interp(lam_spline, lam*(1+redshift), spec_ergsec_cm2)
+    
+    #return spec_ergsec_cm2
+    return spec_spline
 
 def make_sed_fast(sfh_tuple, metval, dustval, zval, filcurves, igmval = True, return_lam = False, sp = mocksp, cosmology = cosmo):
 
@@ -271,7 +293,7 @@ def calc_fnu_sed_fast(fnuspec,filcurves):
         filvals[tindex] = np.sum(temp1.T[0:,0]*temp2)/np.sum(filcurves[0:,tindex])
     return filvals
 
-def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = True, filter_list = 'filter_list.dat', filt_dir = 'filters/', norm_method = 'median', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None, path = 'pregrids/'):
+def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = True, filter_list = 'filter_list.dat', filt_dir = 'filters/', norm_method = 'median', z_step = 0.01, sp = mocksp, cosmology = cosmo, fname = None, path = 'pregrids/', lam_array_spline = []):
 
     """Generate a pregrid of galaxy properties and their corresponding SEDs
         drawn from the prior distributions defined in priors.py
@@ -303,6 +325,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
 
     zval_all = []
     sfh_tuple_all = []
+    sfh_tuple_rec_all = []
     norm_all = []
     dust_all = []
     met_all = []
@@ -324,38 +347,49 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         sfh_tuple = np.hstack((massval, sfrval, Nparam, txparam))
         norm = 1.0
         sfh, timeax = tuple_to_sfh(sfh_tuple, zval, decouple_sfr = priors.decouple_sfr, decouple_sfr_time = priors.decouple_sfr_time)
+        
+        temp = calctimes(timeax, sfh, priors.Nparam)
+        temptuple = calctimes_to_tuple(temp)
+        
         dust = priors.sample_Av_prior()
         met = priors.sample_Z_prior()
 
         #-------------------------------------------
 
-        sp.params['sfh'] = 3
-        sp.set_tabular_sfh(timeax, sfh)
-        sp.params['dust2'] = dust
-        sp.params['logzsol'] = met
-        sp.params['add_igm_absorption'] = True
-        sp.params['add_neb_emission'] = True
-        sp.params['add_neb_continuum'] = True
-        sp.params['imf_type'] = 1 # Chabrier
-        sp.params['zred'] = zval
+#         sp.params['sfh'] = 3
+#         sp.set_tabular_sfh(timeax, sfh)
+#         sp.params['dust2'] = dust
+#         sp.params['logzsol'] = met
+#         sp.params['add_igm_absorption'] = True
+#         sp.params['add_neb_emission'] = True
+#         sp.params['add_neb_continuum'] = True
+#         sp.params['imf_type'] = 1 # Chabrier
+#         sp.params['zred'] = zval
 
-        lam, spec = sp.get_spectrum(tage = cosmology.age(zval).value)
-        spec_ujy = convert_to_microjansky(spec, zval, cosmology)
+#         lam, spec = sp.get_spectrum(tage = cosmology.age(zval).value)
+#         spec_ujy = convert_to_microjansky(spec, zval, cosmology)
 
-        if i == 0:
-            # make grid of filter transmission curves for faster computation
-            fc_zgrid = np.arange(priors.z_min-z_step, priors.z_max+z_step, z_step)
-            temp_fc, temp_lz, temp_lz_lores = make_filvalkit_simple(lam,priors.z_min,fkit_name = filter_list, filt_dir = filt_dir)
+        specdetails = [sfh_tuple, dust, met, zval]
+    
+        if len(lam_array_spline) > 0:
+            sed = makespec(specdetails, priors, sp, cosmology, filter_list, filt_dir, return_spec = lam_array_spline, peraa = True)
+        else:
+            lam, spec_ujy = makespec(specdetails, priors, sp, cosmology, filter_list, filt_dir, return_spec = True)
 
-            fcs= np.zeros((temp_fc.shape[0], temp_fc.shape[1], len(fc_zgrid)))
-            lzs = np.zeros((temp_lz.shape[0], len(fc_zgrid)))
-            lzs_lores = np.zeros((temp_lz_lores.shape[0], len(fc_zgrid)))
+            if i == 0:
+                # make grid of filter transmission curves for faster computation
+                fc_zgrid = np.arange(priors.z_min-z_step, priors.z_max+z_step, z_step)
+                temp_fc, temp_lz, temp_lz_lores = make_filvalkit_simple(lam,priors.z_min,fkit_name = filter_list, filt_dir = filt_dir)
 
-            for i in tqdm(range(len(fc_zgrid))):
-                fcs[0:,0:,i], lzs[0:,i], lzs_lores[0:,i] = make_filvalkit_simple(lam,fc_zgrid[i],fkit_name = filter_list, filt_dir = filt_dir)
+                fcs= np.zeros((temp_fc.shape[0], temp_fc.shape[1], len(fc_zgrid)))
+                lzs = np.zeros((temp_lz.shape[0], len(fc_zgrid)))
+                lzs_lores = np.zeros((temp_lz_lores.shape[0], len(fc_zgrid)))
 
-        fc_index = np.argmin(np.abs(zval - fc_zgrid))
-        sed = calc_fnu_sed_fast(spec_ujy, fcs[0:,0:,fc_index])
+                for i in (range(len(fc_zgrid))):
+                    fcs[0:,0:,i], lzs[0:,i], lzs_lores[0:,i] = make_filvalkit_simple(lam,fc_zgrid[i],fkit_name = filter_list, filt_dir = filt_dir)
+
+            fc_index = np.argmin(np.abs(zval - fc_zgrid))
+            sed = calc_fnu_sed_fast(spec_ujy, fcs[0:,0:,fc_index])
 
         #-------------------------------------------
 
@@ -380,11 +414,14 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         sfr = np.log10(sp.sfr / norm_fac)
         sfh_tuple[0] = sfh_tuple[0] - np.log10(norm_fac)
         sfh_tuple[1] = sfh_tuple[1] - np.log10(norm_fac)
+        temptuple[0] = temptuple[0] - np.log10(norm_fac)
+        temptuple[1] = temptuple[1] - np.log10(norm_fac)
 
         #-------------------------------------------
 
         zval_all.append(zval)
         sfh_tuple_all.append(sfh_tuple)
+        sfh_tuple_rec_all.append(temptuple)
         norm_all.append(norm)
         dust_all.append(dust)
         met_all.append(met)
@@ -395,6 +432,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
 
     pregrid_dict = {'zval':np.array(zval_all),
                    'sfh_tuple':np.array(sfh_tuple_all),
+                   'sfh_tuple_rec':np.array(sfh_tuple_rec_all),
                    'norm':np.array(norm_all), 'norm_method':norm_method,
                    'mstar':np.array(mstar_all), 'sfr':np.array(sfr_all),
                    'dust':np.array(dust_all), 'met':np.array(met_all),
@@ -430,3 +468,50 @@ def load_atlas(fname, N_pregrid, N_param, path = 'pregrids/'):
 
 def quantile_names(N_params):
     return (np.round(np.linspace(0,100,N_params+2)))[1:-1]
+
+
+#---------------- deprecated functions -----------------------
+
+def make_spec_deprecated(sfh_tuple, metval, dustval, zval, igmval = True, return_lam = False, return_ms = False, sp = mocksp, cosmology = cosmo):
+
+    """Use FSPS to generate a spectrum corresponding to a set of
+        input galaxy properties.
+        Args:
+            sfh_tuple[1d numpy array]: SFH parameters, input to gp_sfh_sklearn
+            metval[float]: log metallicity wrt Solar.
+            dustval[float]: Calzetti dust attenuation
+            zval[float]: redshift
+            igmval[float, optional]: Include IGM absorption (Default is True)
+            return_lam[boolean, optional]: Return a wavelength array along
+                with the spectrum (Default is True)
+            sp[stellar population object]: FSPS stellar population object.
+                Initialized previously for speed.
+            cosmo[astropy cosmology object]: cosmology.
+                Default is FlatLambdaCDM
+        Returns:
+            spec[1d numpy array]: Spectrum in F_\nu (\muJy)
+            lam[1d numpy array]: Wavelength in Angstrom corresponding to spectrum
+        """
+
+    sp.params['add_igm_absorption'] = igmval
+    sp.params['zred'] = zval
+    sfh, timeax = tuple_to_sfh(sfh_tuple, zval = zval)
+    timeax = timeax
+    sp.params['sfh'] = 3
+    sp.set_tabular_sfh(timeax, sfh)
+    sp.params['cloudy_dust'] = True
+    sp.params['dust_type'] = 2
+    # sp.params['dust1'] = dust1_rand
+    sp.params['dust2'] = dustval
+    sp.params['logzsol'] = metval
+    [lam_arr,spec] = sp.get_spectrum(tage = np.amax(timeax))
+    spec_ujy = convert_to_microjansky(spec,zval,cosmology)
+
+    # add option to work in energy or F_\lambda as well
+
+    if return_ms == True:
+        return spec_ujy, np.log10(sfh[-1]), np.log10(sp.stellar_mass)
+    elif return_lam == True:
+        return spec_ujy, lam_arr
+    else:
+        return spec_ujy
