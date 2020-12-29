@@ -44,10 +44,11 @@ class SedFit(object):
         self.fit_mask = fit_mask
         self.zbest = zbest
         self.deltaz = deltaz
+        self.dynamic_norm = True
         
     def evaluate_likelihood(self):
         
-        chi2_array, norm_fac = evaluate_sed_likelihood(self.sed, self.sed_err, self.atlas, self.fit_mask, self.zbest, self.deltaz)
+        chi2_array, norm_fac = evaluate_sed_likelihood(self.sed, self.sed_err, self.atlas, self.fit_mask, self.zbest, self.deltaz, self.dynamic_norm)
         self.chi2_array = chi2_array
         self.norm_fac = norm_fac
         self.likelihood = np.exp(-(chi2_array)/2)
@@ -82,7 +83,7 @@ def normerr(nf, pg_seds, sed, sed_err, fit_mask):
     c2v = np.amin(np.mean((pg_seds[fit_mask,0:] - sed.reshape(-1,1)/nf)**2 / (sed_err.reshape(-1,1)/nf)**2, 0))
     return c2v
 
-def evaluate_sed_likelihood(sed, sed_err, atlas, fit_mask = [], zbest = None, deltaz = None):
+def evaluate_sed_likelihood(sed, sed_err, atlas, fit_mask = [], zbest = None, deltaz = None, dynamic_norm = True):
 
     """
     Evaluate the likeihood of model SEDs in an atlas given
@@ -101,9 +102,15 @@ def evaluate_sed_likelihood(sed, sed_err, atlas, fit_mask = [], zbest = None, de
     sed = sed[fit_mask]
     sed_err = sed_err[fit_mask]
     pg_seds = atlas['sed'].copy().T
-
-    nfmin = minimize(normerr, np.nanmedian(sed), args = (pg_seds, sed, sed_err, fit_mask))
-    norm_fac = nfmin['x'][0]
+    
+    if dynamic_norm == True:
+        nfmin = minimize(normerr, np.nanmedian(sed), args = (pg_seds, sed, sed_err, fit_mask))
+        norm_fac = nfmin['x'][0]
+    elif dynamic_norm == False:
+        norm_fac = np.nanmedian(sed)
+    else:
+        norm_fac = 1.0
+        print('undefined norm method. using norm_fac = 1')
 
     sed_normed = sed.reshape(-1,1)/norm_fac
     sed_err_normed = sed_err.reshape(-1,1)/norm_fac

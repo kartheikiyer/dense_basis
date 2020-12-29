@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: dense-basis
-Version: 0.1.6
+Version: 0.1.7
 Summary: SED fitting with non-parametric star formation histories
 Home-page: https://github.com/kartheikiyer/dense_basis
 Author: Kartheik Iyer
@@ -30,10 +30,13 @@ Description: # Dense Basis SED fitting
         
         ### Changelog
         
+        v.0.1.7
+        - added arguments in makespec() to return spectra splined to an input wavelength array
+        
         v.0.1.6
+        - added a class for the SED fitter
         - added the plot_atlas_priors() function
         - overhauled atlas generation with the makespec() function for self-consistency
-        - added a class for the SED fitter
         - added some bugfixes to the gp_sfh module for high sSFR values
         
         v.0.1.5
