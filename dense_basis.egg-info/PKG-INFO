@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: dense-basis
-Version: 0.1.7
+Version: 0.1.8
 Summary: SED fitting with non-parametric star formation histories
 Home-page: https://github.com/kartheikiyer/dense_basis
 Author: Kartheik Iyer
@@ -30,8 +30,16 @@ Description: # Dense Basis SED fitting
         
         ### Changelog
         
+        v.0.1.8 
+        - added parallelization using MultiPool from [schwimmbad](https://schwimmbad.readthedocs.io/en/latest/_modules/schwimmbad/multiprocessing.html). 
+        - pregrid generation can now be parallelized using the `generate_atlas_in_parallel_zgrid()` command.
+        - fixed a bug in the 'sSFRlognormal' sampling of the priors.
+        - added the dynamic_decoupling flag for the sSFR priors, which automatically sets the timescale on which SFR decoupling occurs (if invoked) to scale with redshift.
+        - changed the default value of decouple_sfr_time in tuple_to_sfh() to avoid a low-z error
+        
         v.0.1.7
         - added arguments in makespec() to return spectra splined to an input wavelength array
+        - added dynamic_norm argument to sed fitter (calculates free norm during fitting for better accuracy, but slower)
         
         v.0.1.6
         - added a class for the SED fitter

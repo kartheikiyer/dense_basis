@@ -2,11 +2,15 @@ import numpy as np
 from tqdm import tqdm
 import scipy.io as sio
 
+from statsmodels.nonparametric.smoothers_lowess import lowess
+from scipy.stats import gaussian_kde
+
 # cosmology assumption
 from astropy.cosmology import FlatLambdaCDM
 cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
 
 from .priors import *
+from .pre_grid import *
 from .gp_sfh import *
 from .plotter import *
 
@@ -73,11 +77,155 @@ class SedFit(object):
         
         return 
     
+    def evaluate_MAP_mstar(self, bw_dex = 0.001, smooth = 'kde', lowess_frac = 0.3, bw_method = 'scott', vb = False):
+        
+        qty = self.atlas['mstar'] + np.log10(self.norm_fac),
+        weights = self.likelihood
+        bins = np.arange(4,14,bw_dex)
+        self.mstar_MAP = evaluate_MAP(qty, weights, bins, smooth = smooth, lowess_frac=lowess_frac, bw_method=bw_method, vb=vb)
+        return self.mstar_MAP
+    
+    def evaluate_MAP_sfr(self, bw_dex = 0.001, smooth = 'kde', lowess_frac = 0.3, bw_method = 'scott', vb = False):
+        
+        qty = self.atlas['sfr'] + np.log10(self.norm_fac),
+        weights = self.likelihood
+        bins = np.arange(-6,4,bw_dex),
+        self.sfr_MAP = evaluate_MAP(qty, weights, bins, smooth = smooth, lowess_frac=lowess_frac, bw_method=bw_method, vb=vb)
+        return self.sfr_MAP
+    
     def plot_posteriors(self,truths = []):
         
-        plot_posteriors(self.chi2_array, self.norm_fac, self.sed, self.atlas, truths = truths)
-        return
+        figure = plot_posteriors(self.chi2_array, self.norm_fac, self.sed, self.atlas, truths = truths)
+        return figure                     
     
+    def plot_posterior_spec(self, filt_centers, priors, ngals = 100, alpha=0.1, yscale='log', speccolor = 'k', sedcolor='b', titlestr = [],figsize=(12,7)):
+        
+        set_plot_style()
+        
+        lam_all = []
+        spec_all = []
+        z_all = []
+        
+        bestn_gals = np.argsort(self.likelihood)
+
+        for i in range(ngals):
+        
+            lam_gen, spec_gen =  makespec_atlas(self.atlas, bestn_gals[-(i+1)], priors, mocksp, cosmo, filter_list = [], filt_dir = [], return_spec = True)
+        
+            lam_all.append(lam_gen)
+            spec_all.append(spec_gen)
+            z_all.append(self.atlas['zval'][bestn_gals[-(i+1)]])
+            
+        fig = plt.subplots(1,1,figsize=figsize)
+        for i in range(ngals):
+            plt.plot(lam_all[i]*(1+z_all[i]), spec_all[i]*self.norm_fac, color = speccolor, alpha=alpha)
+
+        plt.errorbar(filt_centers[self.sed>0], self.sed[self.sed>0], yerr=self.sed_err[self.sed>0]*2, color=sedcolor,lw=0, elinewidth=2, marker='o', markersize=12, capsize=5)
+        plt.xlabel(r'$\lambda$ [$\AA$]')
+        plt.ylabel(r'$F_\nu$ [$\mu$Jy]')
+        plt.xlim(np.amin(filt_centers)*0.81, np.amax(filt_centers)*1.2)
+        plt.ylim(np.amin(self.sed[self.sed>0])*0.8,np.amax(self.sed[self.sed>0]+self.sed_err[self.sed>0])*1.5)
+        plt.xscale('log');plt.yscale(yscale);
+        #plot_lines(filt_centers, gal_z)
+        #plt.title(titlestr,fontsize=18)
+        
+        return fig
+    
+    def evaluate_posterior_SFH(self, zval,ngals=100):
+        
+        bestn_gals = np.argsort(self.likelihood)              
+        common_time = np.linspace(0,cosmo.age(zval).value,100)
+        if priors.dynamic_decouple == True:
+            priors.decouple_sfr_time = 100*cosmo.age(zval).value/cosmo.age(0.1).value
+            
+        all_sfhs = []
+        all_weights = []
+        for i in (range(ngals)):
+            sfh, timeax =  tuple_to_sfh(self.atlas['sfh_tuple'][bestn_gals[-(i+1)],0:],self.atlas['zval'][bestn_gals[-(i+1)]])
+            sfh = sfh*self.norm_fac
+            sfh_interp = np.interp(common_time, timeax, sfh)
+
+            all_sfhs.append(sfh_interp)
+            all_weights.append(self.likelihood[bestn_gals[-(i+1)]])
+            
+        all_sfhs = np.array(all_sfhs)
+        all_weights = np.array(all_weights)
+        
+        sfh_50 = np.zeros_like(common_time)
+        sfh_16 = np.zeros_like(common_time)
+        sfh_84 = np.zeros_like(common_time)
+        for ti in range(len(common_time)):
+            qty = np.log10(all_sfhs[0:,ti])
+            qtymask = (qty > -np.inf) & (~np.isnan(qty))
+            if np.sum(qtymask) > 0:
+                smallwts = all_weights.copy()[qtymask.ravel()]
+                qty = qty[qtymask]
+                if len(qty>0):
+                    sfh_50[ti], sfh_16[ti], sfh_84[ti] = 10**calc_percentiles(qty, smallwts, bins=50, percentile_values=[50., 16., 84.])
+#             else:
+#                 print(common_time[ti])
+
+        return sfh_50, sfh_16, sfh_84, common_time
+                        
+                        
+    def plot_posterior_SFH(self, zval,ngals=100,alpha=0.1, speccolor = 'k', sedcolor='b',figsize=(12,7)):
+        
+                        
+        set_plot_style()
+        bestn_gals = np.argsort(self.likelihood)              
+        
+        fig = plt.subplots(1,1,figsize=figsize)
+                        
+        common_time = np.linspace(0,cosmo.age(zval).value,100)
+        if priors.dynamic_decouple == True:
+            priors.decouple_sfr_time = 100*cosmo.age(zval).value/cosmo.age(0.1).value
+        
+        all_sfhs = []
+        all_weights = []
+        for i in (range(ngals)):
+            sfh, timeax =  tuple_to_sfh(self.atlas['sfh_tuple'][bestn_gals[-(i+1)],0:],self.atlas['zval'][bestn_gals[-(i+1)]])
+            sfh = sfh*self.norm_fac
+            sfh_interp = np.interp(common_time, timeax, sfh)
+            all_sfhs.append(sfh_interp)
+            all_weights.append(self.likelihood[bestn_gals[-(i+1)]])
+            alphawt = 1.0*alpha*self.likelihood[bestn_gals[-(i+1)]]/self.likelihood[bestn_gals[-1]]
+            #print(alphawt)
+            plt.plot(np.amax(common_time)-common_time, sfh_interp, color = sedcolor, alpha=alphawt)
+            #plt.plot(np.amax(timeax) - timeax, sfh*norm_fac, color = speccolor, alpha=alpha)
+        all_sfhs = np.array(all_sfhs)
+        all_weights = np.array(all_weights)
+
+        sfh_50 = np.zeros_like(common_time)
+        sfh_16 = np.zeros_like(common_time)
+        sfh_84 = np.zeros_like(common_time)
+        for ti in range(len(common_time)):
+            qty = np.log10(all_sfhs[0:,ti])
+            qtymask = (qty > -np.inf) & (~np.isnan(qty))
+            if np.sum(qtymask) > 0:
+                smallwts = all_weights.copy()[qtymask.ravel()]
+                qty = qty[qtymask]
+                if len(qty>0):
+                    sfh_50[ti], sfh_16[ti], sfh_84[ti] = 10**calc_percentiles(qty, smallwts, bins=50, percentile_values=[50., 16., 84.])
+#             else:
+#                 print(common_time[ti])
+        plt.plot(np.amax(common_time)-common_time, sfh_50,lw=3,color=speccolor)
+        plt.fill_between(np.amax(common_time)-common_time.ravel(), sfh_16.ravel(), sfh_84.ravel(),alpha=0.3,color=speccolor)
+
+        plt.xlabel(r'lookback time [$Gyr$]')
+        plt.ylabel(r'$SFR(t)$ [M$_\odot /$yr]')
+        try:
+            plt.ylim(0,np.amax(sfh_84)*1.2)
+        except:
+            print('couldnt set axis limits')
+            
+        return fig
+                        
+                        
+                           
+    
+    
+#-------------------------------------------------------------
+
 
 def normerr(nf, pg_seds, sed, sed_err, fit_mask):
     c2v = np.amin(np.mean((pg_seds[fit_mask,0:] - sed.reshape(-1,1)/nf)**2 / (sed_err.reshape(-1,1)/nf)**2, 0))
@@ -245,6 +393,79 @@ def calc_percentiles(qty, weights, bins, percentile_values, vb = False):
     return qty_percentile_values
 
 
+def evaluate_MAP(qty, weights, bins, smooth = 'kde', lowess_frac = 0.3, bw_method = 'scott', vb = False):
+    
+    post, xaxis = np.histogram(qty, weights=weights, bins=bins)
+    xaxis_centers = xaxis[0:-1] + np.mean(np.diff(xaxis))
+    
+    if smooth == 'lowess':
+        a = lowess(post, xaxis_centers,frac=lowess_frac)
+        MAP = a[np.argmax(a[0:,1]),0]
+    elif smooth == 'kde':
+        a = gaussian_kde(qty,bw_method=bw_method, weights=weights)
+        MAP = xaxis[np.argmax(a.evaluate(xaxis))]
+    else:
+        MAP = xaxis[np.argmax(post)+1]
+    
+    if vb == True:
+        areapost = np.trapz(x=xaxis_centers, y=post)
+        plt.plot(xaxis_centers, post/areapost)
+        if smooth == 'lowess':
+            plt.plot(a[0:,0],a[0:,1]/areapost)
+        elif smooth == 'kde':
+            plt.plot(xaxis, a.pdf(xaxis))
+        plt.plot([MAP,MAP],plt.ylim())
+        plt.show()
+        
+    return MAP
+
+
+def get_lines(centers, zval):
+    
+    # line list from Table 4 of https://iopscience.iop.org/article/10.3847/1538-4357/aa6c66 (Byler+17)
+    
+    lam_min = np.amin(centers/(1+zval))*0.81
+    lam_max = np.amax(centers/(1+zval))*1.1
+    
+    #line_lam = [1215.6701, 6564.6, 4862.71, 4341.692, 4102.892, 18756.4]
+    #line_name = [r'Ly$\alpha$',r'H$\alpha$',r'H$\beta$',r'H$\gamma$',r'H$\delta$',r'Pa$\alpha$']
+    
+    #line_lam = [1215.6701, 6564.6, 4862.71, 4102.892, 18756.4,4472.735,1640.42, 9852.9, 8729.53,4622.864,5201.705,6585.27,5756.19, 5008.24, 3727.1,3869.86,40522.79]
+    #line_name = [r'Ly$\alpha$',r'H$\alpha$',r'H$\beta$',r'H$\delta$',r'Pa$\alpha$','HeI','HeII','[CI]','[CI]', '[CI]','[NI]','[NII]','[NII]','[OIII]','[OII]','[NeIII]',r'Br$\alpha$']
+    #line_offset = [0.0,0.0,0.0,0.0,0.0,0.007,0.007,0.014,0.014,0.014,0.007,0.007,0.007,0.021,0.021,0.028,0.0]
+    
+    line_lam = [  1215.67,   1906.68,   3727.1 ,  3869.86 ,  4102.89,
+   4862.71 ,  4960.3 ,  6564.6 ,   9071.1,    9533.2,
+  10832.06,  10941.17 , 12821.58,  18756.4,   40522.79, 105105.,
+ 155551.,   187130.,   334800.,   518145.,   883564.  ]
+    line_name = [r'Ly$\alpha$','[CIII]','[OII]$_{x2}$','[NeIII]',r'H$\delta$',
+                r'H$\beta$','[OIII]$_{x2}$',r'H$\alpha$','[SIII]','[SIII]',
+                'He I',r'Pa$\gamma$',r'Pa$\beta$', r'Pa$\alpha$',r'Br$\alpha$','[S IV]',
+                '[Ne III]','[S III]','[S III]','[O III]','[O III]']
+    line_offset = [0.0,0.007,0.007,0.014,0.000,
+                   0.0,0.007,0.0,0.007,0.014,
+                  0.007,0.0,0.0,0.0,0.0,0.0,0.0,
+                  0.0,0.007,0.014,0.0,0.007]
+    
+    good_line_lams, good_line_names, good_line_offsets = [], [], []
+    for i in range(len(line_lam)):
+        if (line_lam[i] > lam_min) & (line_lam[i] < lam_max):
+            good_line_lams.append(line_lam[i])
+            good_line_names.append(line_name[i])
+            good_line_offsets.append(line_offset[i])
+    return good_line_lams, good_line_names, good_line_offsets
+    
+def plot_lines(filt_centers, zval,color = 'forestgreen',alpha=0.3,fontsize=14):
+    
+    lls, lns, los = get_lines(filt_centers, zval)
+    tempy = plt.ylim()
+    for i in range(len(lls)):
+        plt.plot([lls[i]*(1+zval),lls[i]*(1+zval)],tempy,':',color=color,alpha=alpha)
+        plt.text(lls[i]*(1+zval)*1.03, (0.003+los[i])*(tempy[1] - tempy[0]) + tempy[0],lns[i],fontsize=fontsize,color=color)
+    plt.ylim(tempy)
+    return
+
+#---------------------------------------------
 
 def fit_sed_pregrid_old(sed, sed_err, pg_theta, fit_mask = [True], fit_method = 'chi2', norm_method = 'none', return_val = 'params', make_posterior_plots = False, make_sed_plot = False, truths = [np.nan], zbest = None, deltaz = None):
     """

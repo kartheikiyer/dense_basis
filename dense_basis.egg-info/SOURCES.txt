@@ -4,6 +4,7 @@ dense_basis/__init__.py
 dense_basis/gp_sfh.py
 dense_basis/gp_sfh_old.py
 dense_basis/mcmc.py
+dense_basis/parallelization.py
 dense_basis/plotter.py
 dense_basis/pre_grid.py
 dense_basis/priors.py

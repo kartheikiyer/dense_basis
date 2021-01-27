@@ -144,7 +144,7 @@ def plot_posteriors(chi2_array, norm_fac, sed, atlas, truths = []):
                                 quantiles=(0.16, 0.84), levels=[1 - np.exp(-(1/1)**2/2),1 - np.exp(-(2/1)**2/2)],
                                 label_kwargs={"fontsize": 30}, show_titles=True)
     figure.subplots_adjust(right=1.5,top=1.5)
-    plt.show()
+    return figure
 
 
 def plot_priors(fname, N_pregrid, N_param, dir = 'pregrids/'):

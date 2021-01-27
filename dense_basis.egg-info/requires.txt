@@ -3,3 +3,5 @@ numpy
 scipy
 george
 sklearn
+hickle
+schwimmbad

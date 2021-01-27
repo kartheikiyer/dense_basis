@@ -115,7 +115,7 @@ def Pchip_interpolator(x,y,res = 1000):
     return x_pred, y_pred
 
 
-def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = False, decouple_sfr_time = 5, sfr_tolerance = 0.05, vb = False,cosmo = cosmo):
+def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = False, decouple_sfr_time = 10, sfr_tolerance = 0.05, vb = False,cosmo = cosmo):
     # generate an SFH from an input tuple (Mass, SFR, {tx}) at a specified redshift
 
 
@@ -164,6 +164,8 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
     sfh = np.insert(sfh,0,[0])
     
     sfr_decouple_time_index = np.argmin(np.abs(time_arr_interp*cosmo.age(zval).value - decouple_sfr_time/1e3))
+    if sfr_decouple_time_index == 0:
+        sfr_decouple_time_index = 2
     mass_lastbins = np.trapz(x=time_arr_interp[-sfr_decouple_time_index:]*1e9*(cosmo.age(zval).value), y=sfh[-sfr_decouple_time_index:])
     mass_remaining = 10**(sfh_tuple[0]) - mass_lastbins
     if mass_remaining < 0:

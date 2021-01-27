@@ -64,7 +64,7 @@ class Priors(object):
         self.ssfr_max = -7.5
         self.ssfr_mean = 0.6
         self.ssfr_sigma = 0.4 # roughly ~2.5 dex width, use 0.1 for a tighter correlation
-        self.ssfr_shift = 9.0
+        self.ssfr_shift = -0.3
 
         self.z_min = 0.9
         self.z_max = 1.1
@@ -85,22 +85,23 @@ class Priors(object):
         self.Nparam = 3
         self.decouple_sfr = False
         self.decouple_sfr_time = 100 # in Myr
+        self.dynamic_decouple = True # set decouple time according to redshift (100 Myr at z=0.1)
 
 
     def sample_mass_prior(self, size = 1):
         massval = np.random.uniform(size=size)*(self.mass_max-self.mass_min) + self.mass_min
         self.massval = massval
         return massval
-
-    def sample_sfr_prior(self, size=1):
+    
+    def sample_sfr_prior(self, zval = 1.0, size=1):
         if self.sfr_prior_type == 'SFRflat':
             return np.random.uniform(size=size)*(self.sfr_max-self.sfr_min) + self.sfr_min
         elif self.sfr_prior_type == 'sSFRflat':
             return np.random.uniform(size=size)*(self.ssfr_max-self.ssfr_min) + self.ssfr_min + self.massval
         elif self.sfr_prior_type == 'sSFRlognormal':
-            temp = np.random.lognormal(mean = self.ssfr_mean, sigma = self.ssfr_shift, size=size) # about a ~2.5 dex width.
-            temp = temp - np.nanmedian(temp)
-            temp = np.log10(10.0/(cosmo.age(zval).value*1e9))-temp
+            temp = np.random.lognormal(mean = self.ssfr_mean, sigma = self.ssfr_sigma, size=size) # about a ~2.5 dex width.
+            temp = temp - np.exp(self.ssfr_mean) # centered at 0
+            temp = np.log10(10.0/(cosmo.age(zval).value*1e9))-temp + self.ssfr_shift # and then at the sSFR at that redshift
             sfrval = temp + self.massval
             return sfrval
         else:

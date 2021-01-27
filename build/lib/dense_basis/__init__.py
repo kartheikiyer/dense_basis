@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 __bibtex__ = """
 @article{iyer2019non,
   title={Non-parametric Star Formation History Reconstruction with Gaussian Processes I: Counting Major Episodes of Star Formation},
@@ -23,3 +23,4 @@ from .pre_grid import *
 from .tests import *
 from .plotter import *
 from .mcmc import *
+from .parallelization import *
