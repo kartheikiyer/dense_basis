@@ -1,5 +1,8 @@
-from schwimmbad import SerialPool, MultiPool
-from functools import partial
+try:
+    from schwimmbad import SerialPool, MultiPool
+    from functools import partial
+except:
+    print('running without parallelization.')
 import numpy as np
 import os
 import time

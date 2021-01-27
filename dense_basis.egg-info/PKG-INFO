@@ -31,10 +31,11 @@ Description: # Dense Basis SED fitting
         ### Changelog
         
         v.0.1.8 
+        - added plotting functions in the SedFit() class for posterior spectra and SFHs
+        - added the dynamic_decoupling flag for the sSFR priors, which automatically sets the timescale on which SFR decoupling occurs (if invoked) to scale with redshift.
+        - fixed a bug in the 'sSFRlognormal' sampling of the priors.
         - added parallelization using MultiPool from [schwimmbad](https://schwimmbad.readthedocs.io/en/latest/_modules/schwimmbad/multiprocessing.html). 
         - pregrid generation can now be parallelized using the `generate_atlas_in_parallel_zgrid()` command.
-        - fixed a bug in the 'sSFRlognormal' sampling of the priors.
-        - added the dynamic_decoupling flag for the sSFR priors, which automatically sets the timescale on which SFR decoupling occurs (if invoked) to scale with redshift.
         - changed the default value of decouple_sfr_time in tuple_to_sfh() to avoid a low-z error
         
         v.0.1.7
