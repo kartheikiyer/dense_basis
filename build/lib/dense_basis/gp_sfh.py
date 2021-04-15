@@ -61,7 +61,8 @@ def gp_interpolator(x,y,res = 1000, Nparam = 3, decouple_sfr = False):
     yerr[2:(2+Nparam)] = 0.001/np.sqrt(Nparam)
     if len(yerr) > 26:
         yerr[2:(2+Nparam)] = 0.1/np.sqrt(Nparam)
-    yerr[(2+Nparam):] = 0.1
+    if decouple_sfr == True:
+        yerr[(2+Nparam):] = 0.1
     #if decouple_sfr == True:
     #    yerr[-2:] = 0.1/np.sqrt(Nparam)
     #else:
@@ -115,7 +116,7 @@ def Pchip_interpolator(x,y,res = 1000):
     return x_pred, y_pred
 
 
-def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = False, decouple_sfr_time = 10, sfr_tolerance = 0.05, vb = False,cosmo = cosmo):
+def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = False, decouple_sfr_time = 10, sfr_tolerance = 0.05, vb = False,cosmo = cosmo, res = 1000, print_warnings = False):
     # generate an SFH from an input tuple (Mass, SFR, {tx}) at a specified redshift
 
 
@@ -148,7 +149,7 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
             mass_quantiles=  np.insert(mass_quantiles, -1, [delta_m])
 
     if interpolator == 'gp_george':
-        time_arr_interp, mass_arr_interp = gp_interpolator(time_quantiles, mass_quantiles, Nparam = int(Nparam), decouple_sfr = decouple_sfr)
+        time_arr_interp, mass_arr_interp = gp_interpolator(time_quantiles, mass_quantiles, Nparam = int(Nparam), decouple_sfr = decouple_sfr, res=res)
     elif interpolator == 'gp_sklearn':
         time_arr_interp, mass_arr_interp = gp_sklearn_interpolator(time_quantiles, mass_quantiles)
     elif interpolator == 'linear':
@@ -170,7 +171,8 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
     mass_remaining = 10**(sfh_tuple[0]) - mass_lastbins
     if mass_remaining < 0:
         mass_remaining = 0
-        print('input SFR, M* combination is not physically consistent (log M*: %.2f, log SFR: %.2f.)' %(sfh_tuple[0],sfh_tuple[1]))
+        if print_warnings == True:
+            print('input SFR, M* combination is not physically consistent (log M*: %.2f, log SFR: %.2f.)' %(sfh_tuple[0],sfh_tuple[1]))
     mass_initbins = np.trapz(x=time_arr_interp[0:(1000-sfr_decouple_time_index)]*1e9*(cosmo.age(zval).value), y=sfh[0:(1000-sfr_decouple_time_index)])
     sfh[0:(1000-sfr_decouple_time_index)] = sfh[0:(1000-sfr_decouple_time_index)] * mass_remaining / mass_initbins
     

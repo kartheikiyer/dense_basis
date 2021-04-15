@@ -83,7 +83,9 @@ def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], re
     sp.params['gas_logz'] = met # matching stellar to gas-phase metallicity
     sp.params['zred'] = zval
     
-    lam, spec = sp.get_spectrum(tage = cosmo.age(zval).value, peraa = peraa)
+    #lam, spec = sp.get_spectrum(tage = cosmo.age(zval).value, peraa = peraa)
+    # adding 0.1 Myr here to get the last couple of FSPS SSPs
+    lam, spec = sp.get_spectrum(tage = cosmo.age(zval).value+1e-4, peraa = peraa)
     spec_ujy = convert_to_microjansky(spec, zval, cosmo)
     
     if type(return_spec) == type(True):
