@@ -59,6 +59,18 @@ def makespec_atlas(atlas, galid, priors, sp, cosmo, filter_list = [], filt_dir =
     return output
 
 def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], return_spec = False, peraa = False, input_sfh = False):
+    """
+    makespec() works in two ways to create spectra or SEDs from an input list of physical paramters. 
+    with input_sfh = False, specdetails = [sfh_tuple, dust, met, zval]
+    with input_sfh = True, specdetails = [sfh, timeax, dust, met, zval]
+    
+    return_spec can be true, false, or an array of wavelengths. in case 
+    
+    it uses the db.mocksp object for the underlying SPS calculations, so make sure it's set accordingly.
+    it also uses the priors object for things like decouple_sfr. 
+    
+    """
+    
     
     # hardcoded parameters - offload this to a seprarate function
     sp.params['sfh'] = 3

@@ -111,7 +111,7 @@ def plot_atlas_priors(atlas):
 
 
 
-def plot_posteriors(chi2_array, norm_fac, sed, atlas, truths = []):
+def plot_posteriors(chi2_array, norm_fac, sed, atlas, truths = [], **kwargs):
     set_plot_style()
 
     if len(truths) > 0:
@@ -135,14 +135,14 @@ def plot_posteriors(chi2_array, norm_fac, sed, atlas, truths = []):
                                 plot_datapoints=False, fill_contours=True,
                                 bins=20, smooth=1.0,
                                 quantiles=(0.16, 0.84), levels=[1 - np.exp(-(1/1)**2/2),1 - np.exp(-(2/1)**2/2)],
-                                label_kwargs={"fontsize": 30}, show_titles=True)
+                                label_kwargs={"fontsize": 30}, show_titles=True, **kwargs)
     else:
         figure = corner.corner(corner_params.T, weights = np.exp(-chi2_array/2),
                                 labels=pg_labels,
                                 plot_datapoints=False, fill_contours=True,
                                 bins=20, smooth=1.0,
                                 quantiles=(0.16, 0.84), levels=[1 - np.exp(-(1/1)**2/2),1 - np.exp(-(2/1)**2/2)],
-                                label_kwargs={"fontsize": 30}, show_titles=True)
+                                label_kwargs={"fontsize": 30}, show_titles=True, **kwargs)
     figure.subplots_adjust(right=1.5,top=1.5)
     return figure
 
