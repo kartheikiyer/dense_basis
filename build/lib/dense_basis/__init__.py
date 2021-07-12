@@ -24,3 +24,4 @@ from .tests import *
 from .plotter import *
 from .mcmc import *
 from .parallelization import *
+from .basic_fesc import *

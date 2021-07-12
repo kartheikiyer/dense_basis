@@ -1,6 +1,8 @@
+LICENSE
 README.md
 setup.py
 dense_basis/__init__.py
+dense_basis/basic_fesc.py
 dense_basis/gp_sfh.py
 dense_basis/gp_sfh_old.py
 dense_basis/mcmc.py
