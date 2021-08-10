@@ -328,7 +328,7 @@ def plot_posteriors_fesc(sedfit,truths = [], **kwargs):
 
 def calc_fesc_posteriors(sedfit):
     """
-    add f_sec to the calculated posteriors
+    add f_esc to the calculated posteriors
     """
     fesc_vals = get_quants_key('fesc', 50, sedfit.chi2_array, sedfit.atlas, sedfit.norm_fac)
     sedfit.fesc = fesc_vals
