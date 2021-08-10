@@ -130,7 +130,10 @@ class SedFit(object):
                 spec_flam = ujy_to_flam(spec_all[i]*self.norm_fac, lam_all[i]*(1+z_all[i]))
                 plt.plot(lam_all[i]*(1+z_all[i]), spec_flam, color = speccolor, alpha=alpha)
             sed_flam = ujy_to_flam(self.sed,filt_centers)
-            plt.errorbar(filt_centers[self.sed>0], sed_flam[self.sed>0], yerr=self.sed_err[self.sed>0]*2, color=sedcolor,lw=0, elinewidth=2, marker='o', markersize=12, capsize=5)
+            sed_flam_err_up = ujy_to_flam(self.sed+self.sed_err,filt_centers) - sed_flam
+            sed_flam_err_dn = sed_flam - ujy_to_flam(self.sed-self.sed_err,filt_centers)
+            # make these F_\lam errors, not F_nu errors
+            plt.errorbar(filt_centers[self.sed>0], sed_flam[self.sed>0], yerr=(sed_flam_err_up[self.sed>0], sed_flam_err_dn[self.sed>0]), color=sedcolor,lw=0, elinewidth=2, marker='o', markersize=12, capsize=5)
             plt.ylabel(r'$F_\lambda$')
             
         plt.xlabel(r'$\lambda$ [$\AA$]')
