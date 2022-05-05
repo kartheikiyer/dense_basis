@@ -22,7 +22,7 @@ copyright = '2019, Kartheik Iyer'
 author = 'Kartheik Iyer'
 
 # The full version, including alpha/beta/rc tags
-release = 'v 0.1.2'
+release = 'v 0.1.8b'
 
 
 # -- General configuration ---------------------------------------------------

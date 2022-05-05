@@ -4,7 +4,7 @@ import os
 
 setup(
     name="dense_basis",
-    version="0.1.8",
+    version="0.1.8b",
     author="Kartheik Iyer",
     author_email="kartheik.iyer@dunlap.utoronto.ca",
     url = "https://github.com/kartheikiyer/dense_basis",
@@ -19,7 +19,7 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         ],
-    install_requires=["matplotlib", "numpy", "scipy", "george", "sklearn", "hickle", "schwimmbad"]
+    install_requires=["george", "corner", "hickle", "schwimmbad"]
 )
