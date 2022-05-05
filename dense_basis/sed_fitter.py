@@ -271,11 +271,14 @@ def evaluate_sed_likelihood(sed, sed_err, atlas, fit_mask = [], zbest = None, de
         chi2 = np.zeros((len(pg_z),))
         chi2[~redshift_mask] = 1e10
 
-    if np.sum(redshift_mask) == 0:
-        print('atlas does not contain any models in redshift range')
+        if np.sum(redshift_mask) == 0:
+            print('atlas does not contain any models in redshift range')
 
     if dynamic_norm == True:
-        nfmin = minimize(normerr, np.nanmedian(sed), args = (pg_seds[0:,redshift_mask], sed, sed_err, fit_mask))
+        if zbest is not None:
+            nfmin = minimize(normerr, np.nanmedian(sed), args = (pg_seds[0:,redshift_mask], sed, sed_err, fit_mask))
+        else:
+            nfmin = minimize(normerr, np.nanmedian(sed), args = (pg_seds, sed, sed_err, fit_mask))
         norm_fac = nfmin['x'][0]
     elif dynamic_norm == False:
         norm_fac = np.nanmedian(sed)
@@ -286,7 +289,10 @@ def evaluate_sed_likelihood(sed, sed_err, atlas, fit_mask = [], zbest = None, de
     sed_normed = sed.reshape(-1,1)/norm_fac
     sed_err_normed = sed_err.reshape(-1,1)/norm_fac
 
-    chi2[redshift_mask] = np.mean((pg_seds[fit_mask,0:][0:,redshift_mask] - sed_normed)**2 / (sed_err_normed)**2, 0)
+    if zbest is not None:
+        chi2[redshift_mask] = np.mean((pg_seds[fit_mask,0:][0:,redshift_mask] - sed_normed)**2 / (sed_err_normed)**2, 0)
+    else:
+        chi2 = np.mean((pg_seds[fit_mask,0:] - sed_normed)**2 / (sed_err_normed)**2, 0)
 
     # if zbest is not None:
         # pg_z = atlas['zval'].ravel()

@@ -4,7 +4,7 @@ import os
 
 setup(
     name="dense_basis",
-    version="0.1.8b",
+    version="0.1.9",
     author="Kartheik Iyer",
     author_email="kartheik.iyer@dunlap.utoronto.ca",
     url = "https://github.com/kartheikiyer/dense_basis",

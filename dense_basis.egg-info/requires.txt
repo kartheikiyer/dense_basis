@@ -1,7 +1,4 @@
-matplotlib
-numpy
-scipy
 george
-sklearn
+corner
 hickle
 schwimmbad

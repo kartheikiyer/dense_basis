@@ -44,34 +44,36 @@ def convert_to_microjansky(spec,z,cosmology):
     temp = (1+z)*spec *1e6 * 1e23*3.48e33/(4*np.pi*3.086e+24*3.086e+24*cosmo.luminosity_distance(z).value*cosmo.luminosity_distance(z).value)
     #temp = spec *1e6 * 1e23*3.48e33/(4*np.pi*3.086e+24*3.086e+24*cosmo.luminosity_distance(z).value*cosmo.luminosity_distance(z).value*(1+z))
     return temp
-    
+
 def makespec_atlas(atlas, galid, priors, sp, cosmo, filter_list = [], filt_dir = [], return_spec = False):
-    
+
     sfh_tuple = atlas['sfh_tuple'][galid,0:]
     zval = atlas['zval'][galid]
     dust = atlas['dust'][galid]
     met = atlas['met'][galid]
-    
+
     specdetails = [sfh_tuple, dust, met, zval]
-    
+    if priors.dynamic_decouple == True:
+        priors.decouple_sfr_time = 100*cosmo.age(zval).value/cosmo.age(0.1).value
+
     output = makespec(specdetails, priors, sp, cosmo, filter_list, filt_dir, return_spec)
-    
+
     return output
 
 def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], return_spec = False, peraa = False, input_sfh = False):
     """
-    makespec() works in two ways to create spectra or SEDs from an input list of physical paramters. 
+    makespec() works in two ways to create spectra or SEDs from an input list of physical paramters.
     with input_sfh = False, specdetails = [sfh_tuple, dust, met, zval]
     with input_sfh = True, specdetails = [sfh, timeax, dust, met, zval]
-    
-    return_spec can be true, false, or an array of wavelengths. in case 
-    
+
+    return_spec can be true, false, or an array of wavelengths. in case
+
     it uses the db.mocksp object for the underlying SPS calculations, so make sure it's set accordingly.
-    it also uses the priors object for things like decouple_sfr. 
-    
+    it also uses the priors object for things like decouple_sfr.
+
     """
-    
-    
+
+
     # hardcoded parameters - offload this to a seprarate function
     sp.params['sfh'] = 3
     sp.params['cloudy_dust'] = True
@@ -80,7 +82,7 @@ def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], re
     sp.params['add_neb_emission'] = True
     sp.params['add_neb_continuum'] = True
     sp.params['imf_type'] = 1 # Chabrier
-    
+
     # variable parameters
     if input_sfh == True:
         [sfh, timeax, dust, met, zval] = specdetails
@@ -94,32 +96,32 @@ def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], re
     sp.params['logzsol'] = met
     sp.params['gas_logz'] = met # matching stellar to gas-phase metallicity
     sp.params['zred'] = zval
-    
+
     #lam, spec = sp.get_spectrum(tage = cosmo.age(zval).value, peraa = peraa)
     # adding 0.1 Myr here to get the last couple of FSPS SSPs
     lam, spec = sp.get_spectrum(tage = cosmo.age(zval).value+1e-4, peraa = peraa)
     spec_ujy = convert_to_microjansky(spec, zval, cosmo)
-    
+
     if type(return_spec) == type(True):
-        
+
         if return_spec == True:
             return lam, spec_ujy
-    
+
         elif return_spec == False:
             filcurves, _, _ = make_filvalkit_simple(lam, zval, fkit_name = filter_list, filt_dir = filt_dir)
             sed = calc_fnu_sed_fast(spec_ujy, filcurves)
             return sed
-    
+
     elif len(return_spec) > 10:
         return convert_to_splined_spec(spec, lam, return_spec, zval)
-    
+
     else:
         raise('Unknown argument for return_spec. Use True or False, or pass a wavelength grid.')
-        
+
     return 0
 
 def convert_to_splined_spec(spec_peraa, lam, lam_spline, redshift, cosmology = cosmo):
-    
+
     spec = spec_peraa
     spec_ergsec = spec*3.839e33*1e17/(1+redshift)
     lum_dist = cosmology.luminosity_distance(redshift).value
@@ -127,7 +129,7 @@ def convert_to_splined_spec(spec_peraa, lam, lam_spline, redshift, cosmology = c
     # this should have units of 1e-17 erg/s/Ang
     # need units to be flux in 1e-17 erg/s/cm^2/Ang/spaxel
     spec_spline = np.interp(lam_spline, lam*(1+redshift), spec_ergsec_cm2)
-    
+
     #return spec_ergsec_cm2
     return spec_spline
 
@@ -342,7 +344,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
 
     print('generating atlas with: ')
     print(priors.Nparam, ' tx parameters, ', priors.sfr_prior_type, ' SFR sampling', priors.sfh_treatment,' SFH treatment', priors.met_treatment,' met sampling', priors.dust_model, ' dust attenuation', priors.dust_prior,' dust prior', priors.decouple_sfr,' SFR decoupling.')
-    
+
     if rseed is not None:
         print('setting random seed to :',rseed)
         np.random.seed(rseed)
@@ -373,15 +375,15 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         txparam = priors.sample_tx_prior()
         sfh_tuple = np.hstack((massval, sfrval, Nparam, txparam))
         norm = 1.0
-        
+
         if priors.dynamic_decouple == True:
             priors.decouple_sfr_time = 100*cosmo.age(zval).value/cosmo.age(0.1).value
             #print('decouple time: %.2f myr at z: %.2f' %(priors.decouple_sfr_time,zval))
         sfh, timeax = tuple_to_sfh(sfh_tuple, zval, decouple_sfr = priors.decouple_sfr, decouple_sfr_time = priors.decouple_sfr_time)
-        
+
         temp = calctimes(timeax, sfh, priors.Nparam)
         temptuple = calctimes_to_tuple(temp)
-        
+
         dust = priors.sample_Av_prior()
         met = priors.sample_Z_prior()
 
@@ -401,7 +403,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
 #         spec_ujy = convert_to_microjansky(spec, zval, cosmology)
 
         specdetails = [sfh_tuple, dust, met, zval]
-    
+
         if len(lam_array_spline) > 0:
             sed = makespec(specdetails, priors, sp, cosmology, filter_list, filt_dir, return_spec = lam_array_spline, peraa = True)
         else:
@@ -486,7 +488,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
             print('storing without compression')
             hickle.dump(pregrid_dict,
                         path+fname+'_'+str(N_pregrid)+'_Nparam_'+str(Nparam)+'.dbatlas')
-            
+
         return
 
     return pregrid_dict
@@ -528,14 +530,14 @@ def quantile_names(N_params):
 #     sp.params['sfh'] = 3
 #     sp.params['cloudy_dust'] = True
 #     sp.params['dust_type'] = 2
-    
+
 #     sp.params['add_igm_absorption'] = igmval
 #     sp.params['zred'] = zval
-    
+
 #     sfh, timeax = tuple_to_sfh(sfh_tuple, zval = zval)
 #     timeax = timeax
 #     sp.set_tabular_sfh(timeax, sfh)
-    
+
 #     # sp.params['dust1'] = dust1_rand
 #     sp.params['dust2'] = dustval
 #     sp.params['logzsol'] = metval
