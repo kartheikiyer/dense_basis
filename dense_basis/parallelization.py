@@ -56,7 +56,7 @@ def generate_atlas_in_parallel_chunking(chunksize, nchunks, fname = 'temp_parall
 
     combine_pregrid_chunks(fname_base=fname,
                            N_chunks=nchunks, N_pregrid=chunksize, N_param=priors.Nparam,
-                           path=chunk_path, store_path=store_path)
+                           chunk_path=chunk_path, store_path=store_path)
 
     return
 
@@ -66,12 +66,12 @@ def combine_pregrid_chunks(fname_base, N_chunks, N_pregrid, N_param, chunk_path=
     """
 
     i=0
-    atlas_big = db.load_atlas(fname = fname_base+'_chunk_%.0f' %i, N_pregrid = chunksize, N_param = 2, chunk_path=atlas_path)
+    atlas_big = db.load_atlas(fname = fname_base+'_chunk_%.0f' %i, N_pregrid = chunksize, N_param = N_param, path=chunk_path)
     atlas_keys = atlas_big.keys()
 
-    for i in range(1,nchunks):
+    for i in range(1,N_chunks):
 
-        atlas = db.load_atlas(fname = fname_base+'_chunk_%.0f' %i, N_pregrid = chunksize, N_param = 2, chunk_path=atlas_path)
+        atlas = db.load_atlas(fname = fname_base+'_chunk_%.0f' %i, N_pregrid = chunksize, N_param = N_param, path=chunk_path)
 
         for key in atlas.keys():
 
@@ -104,6 +104,8 @@ def combine_pregrid_chunks(fname_base, N_chunks, N_pregrid, N_param, chunk_path=
                     store_path+fname+'_'+str(N_pregrid * N_chunks)+'_Nparam_'+str(N_param)+'.dbatlas')
 
     return
+
+# ------------ deprecated -----------------
 
 def make_atlas_parallel(zval, atlas_params):
     """

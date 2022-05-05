@@ -76,7 +76,7 @@ def gp_interpolator(x,y,res = 1000, Nparam = 3, decouple_sfr = False):
 
     #print(xax.shape, yerr.shape)
     gp.compute(x.ravel(), yerr.ravel())
-    
+
     # optimize kernel parameters
 #     p0 = gp.get_parameter_vector()
 #     results = minimize(nll, p0, jac=grad_nll, method="L-BFGS-B", args = (gp, y))
@@ -163,7 +163,7 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
     sfh = np.diff(mass_arr_interp)*sfh_scale
     sfh[sfh<0] = 0
     sfh = np.insert(sfh,0,[0])
-    
+
     sfr_decouple_time_index = np.argmin(np.abs(time_arr_interp*cosmo.age(zval).value - decouple_sfr_time/1e3))
     if sfr_decouple_time_index == 0:
         sfr_decouple_time_index = 2
@@ -175,10 +175,10 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
             print('input SFR, M* combination is not physically consistent (log M*: %.2f, log SFR: %.2f.)' %(sfh_tuple[0],sfh_tuple[1]))
     mass_initbins = np.trapz(x=time_arr_interp[0:(1000-sfr_decouple_time_index)]*1e9*(cosmo.age(zval).value), y=sfh[0:(1000-sfr_decouple_time_index)])
     sfh[0:(1000-sfr_decouple_time_index)] = sfh[0:(1000-sfr_decouple_time_index)] * mass_remaining / mass_initbins
-    
+
     if (np.abs(np.log10(sfh[-1]) - sfh_tuple[1]) > sfr_tolerance) or (decouple_sfr == True):
         sfh[-sfr_decouple_time_index:] = 10**sfh_tuple[1]
-    
+
 #     if decouple_sfr == True:
 #         sfr_decouple_time_index = np.argmin(np.abs(time_arr_interp*cosmo.age(zval).value - decouple_sfr_time/1e3))
 #         sfh[-sfr_decouple_time_index:] = 10**sfh_tuple[1]
@@ -219,7 +219,7 @@ def calctimes(timeax,sfh,nparams):
 
 def calctimes_to_tuple(calctimelist):
     nparam = len(calctimelist[2])
-    
+
     sfhtuple = []
     sfhtuple.append(calctimelist[0])
     sfhtuple.append(calctimelist[1])
