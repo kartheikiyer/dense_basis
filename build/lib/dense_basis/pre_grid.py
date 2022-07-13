@@ -60,6 +60,34 @@ def makespec_atlas(atlas, galid, priors, sp, cosmo, filter_list = [], filt_dir =
 
     return output
 
+def make_colours(specdetails, sp, cosmo):
+    """
+    generate standard rest frame colours (UV,VJ,NUVr,rJ, NUVU) using FSPS
+    
+    """
+
+    #best_ind = np.argmin(self.chi2_array)
+    #la,spec = makespec_atlas1(atlas,best_ind,priors,mocksp,cosmo,return_spec=True,norm_fac=norm_fac) #same as makespec_atlas except norm_fac=1.
+
+    sp.params['zred']=0
+
+    sfh_tuple, dust, met, zval = specdetails # redshift of model 
+
+    if np.isnan(zval):
+        rest_nuv, rest_r, rest_u, rest_v, rest_j = -99, -99, -99, -99, -99
+    else:
+        rest_nuv, rest_r, rest_u, rest_v, rest_j = sp.get_mags(tage = cosmo.age(zval).value, \
+                                              bands=['galex_nuv','sdss_r','u','v','2mass_j'])
+
+    nuvu = rest_nuv - rest_u
+    nuvr = rest_nuv - rest_r
+    uv = rest_u - rest_v 
+    vj = rest_v - rest_j 
+    rj = rest_r - rest_j 
+
+            # add bit to calculate rf colour errors here (calc rf mags then add errors) > this goes in actual fitting 
+    return nuvu, nuvr, uv, vj, rj 
+
 def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], return_spec = False, peraa = False, input_sfh = False):
     """
     makespec() works in two ways to create spectra or SEDs from an input list of physical paramters.
@@ -360,6 +388,12 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
     sfr_all = []
     sim_timeax_all = []
     sim_sfh_all = []
+    # new 
+    nuvu_all = []
+    uv_all = []
+    vj_all = []
+    rj_all = []
+    nuvr_all = []
 
     Nparam = priors.Nparam
 
@@ -423,6 +457,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
 
             fc_index = np.argmin(np.abs(zval - fc_zgrid))
             sed = calc_fnu_sed_fast(spec_ujy, fcs[0:,0:,fc_index])
+            
 
         #-------------------------------------------
 
@@ -450,6 +485,12 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         temptuple[0] = temptuple[0] - np.log10(norm_fac)
         temptuple[1] = temptuple[1] - np.log10(norm_fac)
 
+
+        # calculate rest frame colours 
+
+        nuvu, nuvr, uv, vj, rj = make_colours(specdetails, sp, cosmo)
+
+
         #-------------------------------------------
 
         zval_all.append(zval)
@@ -461,6 +502,12 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         sed_all.append(sed)
         mstar_all.append(mstar)
         sfr_all.append(sfr)
+        nuvu_all.append(nuvu)
+        nuvr_all.append(nuvr)
+        uv_all.append(uv)
+        vj_all.append(vj)
+        rj_all.append(rj)
+        
 
 
     pregrid_dict = {'zval':np.array(zval_all),
@@ -469,7 +516,10 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
                    'norm':np.array(norm_all), 'norm_method':norm_method,
                    'mstar':np.array(mstar_all), 'sfr':np.array(sfr_all),
                    'dust':np.array(dust_all), 'met':np.array(met_all),
-                   'sed':np.array(sed_all)}
+                   'sed':np.array(sed_all),
+                   'nuvu':np.array(nuvu_all), 'nuvr':np.array(nuvr_all), 
+                   'uv':np.array(uv_all), 'vj':np.array(vj_all), 'rj':np.array(rj_all)
+                   }
 
     if store == True:
 

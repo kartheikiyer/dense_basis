@@ -67,6 +67,22 @@ class SedFit(object):
 
         quants = get_quants(self.chi2_array, self.atlas, self.norm_fac, bw_dex = bw_dex, percentile_values = percentile_values, vb = vb)
 
+        # add in colours here
+        # key, bins, chi2_array, cat, norm_fac, percentile_values = [50.,16.,84.],
+
+
+        nuvu = get_quants_key('nuvu', np.arange(-0.5,6,0.001), self.chi2_array,self.atlas,self.norm_fac)
+        uv = get_quants_key('uv', np.arange(-0.5,6,0.001), self.chi2_array,self.atlas,self.norm_fac)
+        vj = get_quants_key('vj', np.arange(-0.5,6,0.001), self.chi2_array,self.atlas,self.norm_fac)
+        nuvr = get_quants_key('nuvr', np.arange(-0.5,6,0.001), self.chi2_array,self.atlas,self.norm_fac)
+        rj = get_quants_key('rj', np.arange(-0.5,6,0.001), self.chi2_array,self.atlas,self.norm_fac)
+
+
+        self.nuvu = nuvu 
+        self.uv = uv
+        self.vj = vj
+        self.nuvr = nuvr
+        self.rj = rj
         self.mstar = quants[0]
         self.sfr = quants[1]
         self.Av = quants[2]
@@ -74,6 +90,8 @@ class SedFit(object):
         self.z = quants[4]
         self.sfh_tuple = quants[5]
         self.percentile_values = percentile_values
+
+        
 
         return
 
