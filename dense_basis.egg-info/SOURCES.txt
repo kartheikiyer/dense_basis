@@ -26,6 +26,16 @@ dense_basis.egg-info/SOURCES.txt
 dense_basis.egg-info/dependency_links.txt
 dense_basis.egg-info/requires.txt
 dense_basis.egg-info/top_level.txt
+dense_basis/__pycache__/__init__.cpython-310.pyc
+dense_basis/__pycache__/basic_fesc.cpython-310.pyc
+dense_basis/__pycache__/gp_sfh.cpython-310.pyc
+dense_basis/__pycache__/mcmc.cpython-310.pyc
+dense_basis/__pycache__/parallelization.cpython-310.pyc
+dense_basis/__pycache__/plotter.cpython-310.pyc
+dense_basis/__pycache__/pre_grid.cpython-310.pyc
+dense_basis/__pycache__/priors.cpython-310.pyc
+dense_basis/__pycache__/sed_fitter.cpython-310.pyc
+dense_basis/__pycache__/tests.cpython-310.pyc
 dense_basis/filters/filter_list.dat
 dense_basis/filters/filter_list_cosmos.dat
 dense_basis/filters/filter_list_cosmos_old.dat

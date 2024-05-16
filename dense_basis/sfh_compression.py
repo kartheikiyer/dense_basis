@@ -431,7 +431,7 @@ def get_synth_spec(stars, zval, cosmo, grid):
     spec_ujy = galaxy.stars.spectra['incident'].get_fnu(cosmo, zval) / 1e3
     return lam, spec_ujy
 
-def process_single_gal(gal_id, sfhist_vars, grid, nparam = 10, interpolator = 'gp-george', filter_list = [], filt_dir = []):
+def process_single_gal(gal_id, sfhist_vars, grid, nparam = 10, interpolator = 'gp-george', filter_list = [], filt_dir = [], cosmo=cosmo):
     """
     Function to compress the SFHt and Zt for a single galaxy from the SC-SAM
     or any object packaged in the sfhist_vars format
@@ -491,9 +491,41 @@ def process_single_gal(gal_id, sfhist_vars, grid, nparam = 10, interpolator = 'g
     sfh_comp = (*sfh_comp, norm_fac)
     filcurves, _, _ = make_filvalkit_simple(lam, zval, fkit_name = filter_list, filt_dir = filt_dir)
     sed_true = np.array(calc_fnu_sed_fast(spec_true, filcurves))
-    sed_comp = np.array(calc_fnu_sed_fast(spec_comp * norm_fac, filcurves))
+    spec_comp = spec_comp * norm_fac
+    sed_comp = np.array(calc_fnu_sed_fast(spec_comp, filcurves))
 
-    return sfh_comp, sed_true, sed_comp, norm_fac, temp, tempsfh, temptime, lam, lam_mask, spec_true, spec_comp, zval
+    return sfh_comp, sed_true, sed_comp, norm_fac, temp, tempsfh, tempmet, temptime, lam, lam_mask, spec_true, spec_comp, zval
+
+
+def uncompress_and_generate_seds(sfh_comp, zval,
+                                 interpolator='gp-george', 
+                                 cosmo=cosmo, grid=grid,
+                                 filter_list = [], filt_dir = []):
+    
+    sfr_Myr = cosmo.age(zval).value * 20
+    if sfr_Myr > 100:
+        sfr_Myr = 100
+    
+    tempsfh, temptime = tuple_to_sfh_log(np.array(sfh_comp[0]), zval, interpolator = interpolator, 
+                                                         sfr_Myr=sfr_Myr, vb=False)
+    tempmet, temptime = tuple_to_sfh_log(np.array(sfh_comp[1]), zval, interpolator = interpolator, 
+                                                         sfr_Myr=sfr_Myr, vb=False)
+    tempmet = np.log10(tempmet)
+    tempmet[tempmet<-2.1] = -2.1
+    temp = [np.hstack(sfh_comp[0:3])]
+    stars_comp = synthesizer_nonparam_sfh(temptime, tempsfh, tempmet, grid=grid)
+    lam_comp, spec_comp = get_synth_spec(stars_comp, zval, cosmo, grid)
+    
+    lam = lam_comp.value
+    lam_mask = (lam*(1+zval) > 3.5e3)  & (lam*(1+zval) < 1e5)
+    norm_fac = sfh_comp[-1]
+    
+    filcurves, _, _ = make_filvalkit_simple(lam, zval, fkit_name = filter_list, filt_dir = filt_dir)
+    
+    spec_comp = spec_comp  * norm_fac
+    sed_comp = np.array(calc_fnu_sed_fast(spec_comp, filcurves))
+
+    return sed_comp, tempsfh, temptime, lam, lam_mask, spec_comp
 
 def get_lam_centers_widths(filter_list, filt_dir):
     """
