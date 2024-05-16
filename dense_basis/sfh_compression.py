@@ -89,10 +89,10 @@ def ingest_sfhist_file_noheader(work_dir, sfhfile):
     ctr = 0
     try:
         with open(file_path, 'r') as file:
-            for line in db.tqdm(file):
+            for line in tqdm(file):
                 if ctr > -1:
             
-                    temp = db.tofloatarr(line)
+                    temp = tofloatarr(line)
                     if len(temp) == 3:
                         id1.append(temp[0])
                         id2.append(temp[1])
@@ -463,7 +463,7 @@ def synthesizer_nonparam_sfh(timeax, sfhist, methist, grid=grid):
     
     return sfh_grid
 
-def get_synth_spec(stars, zval, cosmo, grid):
+def get_synth_spec(stars, zval, cosmo, grid, dust_params = []):
     
     galaxy = Galaxy(stars)
     galaxy.stars.get_spectra_incident(grid)
@@ -553,6 +553,7 @@ def uncompress_and_generate_seds(sfh_comp, zval,
     tempmet = np.log10(tempmet)
     tempmet[tempmet<-2.1] = -2.1
     temp = [np.hstack(sfh_comp[0:3])]
+    
     stars_comp = synthesizer_nonparam_sfh(temptime, tempsfh, tempmet, grid=grid)
     lam_comp, spec_comp = get_synth_spec(stars_comp, zval, cosmo, grid)
     
@@ -565,7 +566,7 @@ def uncompress_and_generate_seds(sfh_comp, zval,
     spec_comp = spec_comp  * norm_fac
     sed_comp = np.array(calc_fnu_sed_fast(spec_comp, filcurves))
 
-    return sed_comp, tempsfh, temptime, lam, lam_mask, spec_comp
+    return sed_comp, tempsfh, tempmet, temptime, lam, lam_mask, spec_comp
 
 def get_lam_centers_widths(filter_list, filt_dir):
     """
@@ -601,3 +602,35 @@ def get_lam_centers_widths(filter_list, filt_dir):
     lam_centers = np.array(lam_centers)
     lam_widths = np.array(lam_widths)
     return lam_centers, lam_widths
+
+def uncompress_sfh(sfh_comp, zval, interpolator='gp-george'):
+    
+    sfr_Myr = cosmo.age(zval).value * 20
+    if sfr_Myr > 100:
+        sfr_Myr = 100
+    
+    tempsfh, temptime = tuple_to_sfh_log(np.array(sfh_comp[0]), zval, interpolator = interpolator, 
+                                                         sfr_Myr=sfr_Myr, vb=False)
+    tempmet, temptime = tuple_to_sfh_log(np.array(sfh_comp[1]), zval, interpolator = interpolator, 
+                                                         sfr_Myr=sfr_Myr, vb=False)
+    tempmet = np.log10(tempmet)
+    tempmet[tempmet<-2.1] = -2.1
+    temp = [np.hstack(sfh_comp[0:3])]
+    
+    return tempsfh, tempmet, temptime
+
+def make_sed_from_sfh(temptime, tempsfh, tempmet, grid, zval, cosmo, sfh_comp, filter_list, filt_dir):
+    
+    stars_comp = synthesizer_nonparam_sfh(temptime, tempsfh, tempmet, grid=grid)
+    lam_comp, spec_comp = get_synth_spec(stars_comp, zval, cosmo, grid)
+    
+    lam = lam_comp.value
+    lam_mask = (lam*(1+zval) > 3.5e3)  & (lam*(1+zval) < 1e5)
+    norm_fac = sfh_comp[-1]
+    
+    filcurves, _, _ = make_filvalkit_simple(lam, zval, fkit_name = filter_list, filt_dir = filt_dir)
+    
+    spec_comp = spec_comp  * norm_fac
+    sed_comp = np.array(calc_fnu_sed_fast(spec_comp, filcurves))
+    
+    return sed_comp, spec_comp, lam, lam_mask
