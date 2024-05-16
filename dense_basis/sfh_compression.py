@@ -75,6 +75,46 @@ def ingest_sfhist_file(work_dir, sfhfile):
         
     return id1, id2, galz, sfharrs, tbins
 
+
+def ingest_sfhist_file_noheader(work_dir, sfhfile):
+
+    id1 = []
+    id2 = []
+    galz = []
+    sfharrs = []
+    issfh = False
+
+    file_path = work_dir + sfhfile
+
+    ctr = 0
+    try:
+        with open(file_path, 'r') as file:
+            for line in db.tqdm(file):
+                if ctr > -1:
+            
+                    temp = db.tofloatarr(line)
+                    if len(temp) == 3:
+                        id1.append(temp[0])
+                        id2.append(temp[1])
+                        galz.append(temp[2])
+                        if issfh == True:
+                            sfharrs.append(np.array(sfharr))
+                        sfharr = []
+                        issfh = True
+                    else:
+                        sfharr.append(temp)
+
+                ctr = ctr+1
+            sfharrs.append(np.array(sfharr))
+    except FileNotFoundError:
+        print(f"File '{file_path}' not found.")
+    except IOError:
+        print(f"Error reading file '{file_path}'.")
+    
+    tbins = np.arange(0,sfharrs[0].T[0].shape[0] * 0.01,0.01)
+        
+    return id1, id2, galz, sfharrs, tbins
+
 def ingest_sfhist_file_14march24(work_dir, sfhfile):
     """
     Updated function to read the sfhist files for the CAMELS-SAM (sam ver 14th march 2024)
