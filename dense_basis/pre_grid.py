@@ -254,6 +254,8 @@ def make_filvalkit_simple(lam,z, fkit_name = 'filter_list.dat' ,vb=False, filt_d
             tempfilt = np.loadtxt(get_file('filters/filter_curves/egs', temp[i][18:].decode("utf-8")))
         elif (filt_dir == 'internal') & (fkit_name == 'filter_list_uds.dat'):
             tempfilt = np.loadtxt(get_file('filters/filter_curves/uds', temp[i][18:].decode("utf-8")))
+        elif (filt_dir == 'internal') & (fkit_name == 'filter_list_ltu.dat'):
+            tempfilt = np.loadtxt(get_file('filters/filter_curves/ltu', temp[i][18:].decode("utf-8")))
         else:
             if filt_dir[-1] == '/':
                 filt_name = filt_dir+temp[i]

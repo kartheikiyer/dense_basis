@@ -1,12 +1,10 @@
 Metadata-Version: 2.1
 Name: dense-basis
-Version: 0.1.9
+Version: 0.1.9sam
 Summary: SED fitting with non-parametric star formation histories
 Home-page: https://github.com/kartheikiyer/dense_basis
 Author: Kartheik Iyer
-Author-email: kartheik.iyer@dunlap.utoronto.ca
-License: UNKNOWN
-Platform: UNKNOWN
+Author-email: kartheikiyer@gmail.com
 Classifier: Development Status :: 4 - Beta
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Intended Audience :: Developers
@@ -72,5 +70,3 @@ v.0.1.4
 - updated the GP tuple_to_sfh module to decouple SFR if necessary.
 - overhauled the generate_atlas() and load_atlas() functions,
 - shifted storage of precomputed pregrids/atlas(es) from scipy.io to hickle
-
-

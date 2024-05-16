@@ -2,3 +2,6 @@ george
 corner
 hickle
 schwimmbad
+nbsphinx
+statsmodels
+emcee

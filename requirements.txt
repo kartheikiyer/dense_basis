@@ -3,3 +3,5 @@ george
 corner
 schwimmbad
 hickle
+statsmodels 
+emcee

@@ -1,0 +1,5 @@
+SLOAN_SDSS.u.dat
+SLOAN_SDSS.g.dat
+SLOAN_SDSS.r.dat
+SLOAN_SDSS.i.dat
+SLOAN_SDSS.z.dat
