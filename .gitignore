@@ -1,4 +1,5 @@
 .ipynb_checkpoints
 dist/
 docs/tutorials/pregrids/
+build/
 dense_basis.egg-info/
