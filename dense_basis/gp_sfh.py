@@ -6,8 +6,11 @@ warnings.filterwarnings('ignore')
 import george
 from george import kernels
 
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF,WhiteKernel, ConstantKernel as C, DotProduct, RationalQuadratic, Matern
+try:
+    from sklearn.gaussian_process import GaussianProcessRegressor
+    from sklearn.gaussian_process.kernels import DotProduct, RationalQuadratic
+except ImportError:
+    print("sklearn not available. The `gp_sklearn` interpolator will fail if chosen.")
 
 from scipy.optimize import minimize
 from scipy.interpolate import PchipInterpolator, interp1d
