@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import corner
 
-import seaborn as sns
+# import seaborn as sns
 
 from pylab import *
 
@@ -10,8 +10,8 @@ from .pre_grid import make_filvalkit_simple, load_atlas
 from .gp_sfh import *
 
 def set_plot_style():
-    sns.set(font_scale=2)
-    sns.set_style('ticks')
+    # sns.set(font_scale=2)
+    # sns.set_style('ticks')
 
     rc('axes', linewidth=3)
     rcParams['xtick.major.size'] = 12
@@ -83,7 +83,7 @@ def quantile_names(N_params):
     return (np.round(np.linspace(0,100,N_params+2)))[1:-1]
 
 def plot_atlas_priors(atlas):
-    
+
     mass_unnormed = np.log10(10**atlas['mstar'] / atlas['norm'])
     sfr_unnormed = np.log10(10**atlas['sfr'] / atlas['norm'])
     ssfr = sfr_unnormed - mass_unnormed
@@ -100,13 +100,13 @@ def plot_atlas_priors(atlas):
 
     figure = corner.corner(quants,plot_datapoints=False, fill_contours=True,labels=pg_labels,
                                     bins=20, smooth=1.0,
-                                    quantiles=(0.16, 0.84), 
+                                    quantiles=(0.16, 0.84),
                                     levels=[1 - np.exp(-(1/1)**2/2),1 - np.exp(-(2/1)**2/2)],
                                     label_kwargs={"fontsize": 30})
     figure.subplots_adjust(right=1.5,top=1.5)
 
     plt.show()
-    
+
     return
 
 
