@@ -232,7 +232,7 @@ class Priors(object):
             sfh_tuples[1,i] = ssfr + ref_mstar
             sfhs[0:,i], time = tuple_to_sfh(sfh_tuples[0:,i], zval = zval)
             sfr_error[i] = np.log10(sfhs[-1,i]) - sfh_tuples[1,i]
-            mass_error[i] = np.log10(np.trapz(x=time*1e9, y=sfhs[0:,i])) - sfh_tuples[0,i]
+            mass_error[i] = np.log10(np.trapezoid(x=time*1e9, y=sfhs[0:,i])) - sfh_tuples[0,i]
 
         # sfr_error[sfr_error<-2] = -2
         # sfr_error[sfr_error>2] = 2

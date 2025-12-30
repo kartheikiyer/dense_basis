@@ -455,7 +455,7 @@ def evaluate_MAP(qty, weights, bins, smooth = 'kde', lowess_frac = 0.3, bw_metho
         MAP = xaxis[np.argmax(post)+1]
 
     if vb == True:
-        areapost = np.trapz(x=xaxis_centers, y=post)
+        areapost = np.trapezoid(x=xaxis_centers, y=post)
         plt.plot(xaxis_centers, post/areapost)
         if smooth == 'lowess':
             plt.plot(a[0:,0],a[0:,1]/areapost)

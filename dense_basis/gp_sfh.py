@@ -170,13 +170,13 @@ def tuple_to_sfh(sfh_tuple, zval, interpolator = 'gp_george', decouple_sfr = Fal
     sfr_decouple_time_index = np.argmin(np.abs(time_arr_interp*cosmo.age(zval).value - decouple_sfr_time/1e3))
     if sfr_decouple_time_index == 0:
         sfr_decouple_time_index = 2
-    mass_lastbins = np.trapz(x=time_arr_interp[-sfr_decouple_time_index:]*1e9*(cosmo.age(zval).value), y=sfh[-sfr_decouple_time_index:])
+    mass_lastbins = np.trapezoid(x=time_arr_interp[-sfr_decouple_time_index:]*1e9*(cosmo.age(zval).value), y=sfh[-sfr_decouple_time_index:])
     mass_remaining = 10**(sfh_tuple[0]) - mass_lastbins
     if mass_remaining < 0:
         mass_remaining = 0
         if print_warnings == True:
             print('input SFR, M* combination is not physically consistent (log M*: %.2f, log SFR: %.2f.)' %(sfh_tuple[0],sfh_tuple[1]))
-    mass_initbins = np.trapz(x=time_arr_interp[0:(1000-sfr_decouple_time_index)]*1e9*(cosmo.age(zval).value), y=sfh[0:(1000-sfr_decouple_time_index)])
+    mass_initbins = np.trapezoid(x=time_arr_interp[0:(1000-sfr_decouple_time_index)]*1e9*(cosmo.age(zval).value), y=sfh[0:(1000-sfr_decouple_time_index)])
     sfh[0:(1000-sfr_decouple_time_index)] = sfh[0:(1000-sfr_decouple_time_index)] * mass_remaining / mass_initbins
 
     if (np.abs(np.log10(sfh[-1]) - sfh_tuple[1]) > sfr_tolerance) or (decouple_sfr == True):
@@ -215,7 +215,7 @@ def calctimes(timeax,sfh,nparams):
         #print(1*(i+1)/(nparams+1))
 
     #mass = np.log10(np.sum(sfh)*1e9)
-    mass = np.log10(np.trapz(sfh,timeax*1e9))
+    mass = np.log10(np.trapezoid(sfh,timeax*1e9))
     sfr = np.log10(sfh[-1])
 
     return mass, sfr, tx/np.amax(timeax)
