@@ -1,6 +1,11 @@
 numpy>=2.0
-nbsphinx
+scipy
+matplotlib
+astropy
+tqdm
+statsmodels
 george
 corner
-schwimmbad
 hickle
+schwimmbad
+nbsphinx

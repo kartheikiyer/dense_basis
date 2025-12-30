@@ -21,5 +21,16 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.8",
         ],
-    install_requires=["numpy>=2.0", "george", "corner", "hickle", "schwimmbad"]
+    install_requires=[
+        "numpy>=2.0",
+        "scipy",
+        "matplotlib",
+        "astropy",
+        "tqdm",
+        "statsmodels",
+        "george",
+        "corner",
+        "hickle",
+        "schwimmbad"
+    ]
 )
