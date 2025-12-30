@@ -91,22 +91,24 @@ class Priors(object):
     def sample_mass_prior(self, size = 1):
         massval = np.random.uniform(size=size)*(self.mass_max-self.mass_min) + self.mass_min
         self.massval = massval
-        return massval
+        # Return scalar if size=1 for NumPy 2.x compatibility
+        return massval.item() if size == 1 else massval
     
     def sample_sfr_prior(self, zval = 1.0, size=1):
         if self.sfr_prior_type == 'SFRflat':
-            return np.random.uniform(size=size)*(self.sfr_max-self.sfr_min) + self.sfr_min
+            result = np.random.uniform(size=size)*(self.sfr_max-self.sfr_min) + self.sfr_min
         elif self.sfr_prior_type == 'sSFRflat':
-            return np.random.uniform(size=size)*(self.ssfr_max-self.ssfr_min) + self.ssfr_min + self.massval
+            result = np.random.uniform(size=size)*(self.ssfr_max-self.ssfr_min) + self.ssfr_min + self.massval
         elif self.sfr_prior_type == 'sSFRlognormal':
             temp = np.random.lognormal(mean = self.ssfr_mean, sigma = self.ssfr_sigma, size=size) # about a ~2.5 dex width.
             temp = temp - np.exp(self.ssfr_mean) # centered at 0
             temp = np.log10(10.0/(cosmo.age(zval).value*1e9))-temp + self.ssfr_shift # and then at the sSFR at that redshift
-            sfrval = temp + self.massval
-            return sfrval
+            result = temp + self.massval
         else:
             print('unknown SFR prior type. choose from SFRflat, sSFRflat, or sSFRlognormal.')
             return np.nan
+        # Return scalar if size=1 for NumPy 2.x compatibility
+        return result.item() if size == 1 else result
 
     def sample_tx_prior(self, size=1):
         if self.sfh_treatment == 'TNGlike':
@@ -127,23 +129,28 @@ class Priors(object):
     def sample_z_prior(self, size=1):
         zval = np.random.uniform(size=size)*(self.z_max-self.z_min) + self.z_min
         self.zval = zval
-        return zval
+        # Return scalar if size=1 for NumPy 2.x compatibility
+        return zval.item() if size == 1 else zval
 
     def sample_Z_prior(self, size=1):
         if self.met_treatment == 'flat':
-            return np.random.uniform(size=size)*(self.Z_max-self.Z_min) + self.Z_min
+            result = np.random.uniform(size=size)*(self.Z_max-self.Z_min) + self.Z_min
         elif self.met_treatment == 'massmet':
-            met = np.random.normal(scale = self.massmet_width, size=size) + (self.massval - 7)/(10.8-7) - 1.0 # roughly solar met at MW-mass
-            return met
+            result = np.random.normal(scale = self.massmet_width, size=size) + (self.massval - 7)/(10.8-7) - 1.0 # roughly solar met at MW-mass
+        # Return scalar if size=1 for NumPy 2.x compatibility
+        return result.item() if size == 1 else result
 
     def sample_Av_prior(self, size=1):
         if self.dust_model == 'Calzetti':
             if self.dust_prior == 'flat':
-                return np.random.uniform(size=size)*(self.Av_max-self.Av_min) + self.Av_min
+                result = np.random.uniform(size=size)*(self.Av_max-self.Av_min) + self.Av_min
             elif self.dust_prior == 'exp':
-                return np.random.exponential(size=size)*(self.Av_exp_scale)
+                result = np.random.exponential(size=size)*(self.Av_exp_scale)
             else:
                 print('unknown dust_prior. options are flat and exp')
+                return np.nan
+            # Return scalar if size=1 for NumPy 2.x compatibility
+            return result.item() if size == 1 else result
         if self.dust_model == 'CF00':
             # using parameters from Pacifici+16 for now
             slope_ism = np.random.uniform(size=size)*(0.6) - 1.0 # ism slope in range [-1.0,-0.4]
