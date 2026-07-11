@@ -217,6 +217,7 @@ class Priors(object):
     def make_N_prior_draws(self, size=10, random_seed = np.random.randint(1)):
         sfh_tuples = np.zeros((self.Nparam+3, size))
         Avs = np.zeros((size,))
+        dust_indices = np.zeros((size,))
         Zs = np.zeros((size,))
         zs = np.zeros((size,))
         for i in range(size):
