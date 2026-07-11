@@ -207,7 +207,12 @@ class Priors(object):
         sfh_tuple = self.sample_sfh_tuple()
         temp_Z = self.sample_Z_prior()
         temp_Av = self.sample_Av_prior()
-        return sfh_tuple, temp_Z, temp_Av, temp_z
+        if self.dust_model == 'Calzetti':
+            return sfh_tuple, temp_Z, temp_Av, temp_z
+        elif self.dust_model == 'KriekConroy':
+            temp_dust_index = temp_Av[1]
+            temp_Av = temp_Av[0]
+            return sfh_tuple, temp_Z, temp_Av, temp_dust_index, temp_z
 
     def make_N_prior_draws(self, size=10, random_seed = np.random.randint(1)):
         sfh_tuples = np.zeros((self.Nparam+3, size))
