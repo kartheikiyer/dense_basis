@@ -14,7 +14,8 @@ from .gp_sfh import *
 
 try:
     import fsps
-    mocksp = fsps.StellarPopulation(compute_vega_mags=False, zcontinuous=1,sfh=0, imf_type=1, logzsol=0.0, dust_type=2, dust2=0.0, add_neb_emission=True)
+    # changing to a Kriek & Conroy (2013) dust attenuation curve, (dust_index=0.0 reproduces Calzetti-like slope; negative values steepen it, positive flatten/grayer.)
+    mocksp = fsps.StellarPopulation(compute_vega_mags=False, zcontinuous=1,sfh=0, imf_type=1, logzsol=0.0, dust_type=4, dust2=0.0, dust_index=0.0, add_neb_emission=True)
     print('Starting dense_basis. please wait ~ a minute for the FSPS backend to initialize.')
 
 except:
@@ -50,9 +51,10 @@ def makespec_atlas(atlas, galid, priors, sp, cosmo, filter_list = [], filt_dir =
     sfh_tuple = atlas['sfh_tuple'][galid,0:]
     zval = atlas['zval'][galid]
     dust = atlas['dust'][galid]
+    dust_index = atlas['dust_index'][galid]
     met = atlas['met'][galid]
 
-    specdetails = [sfh_tuple, dust, met, zval]
+    specdetails = [sfh_tuple, dust, dust_index, met, zval]
     if priors.dynamic_decouple == True:
         priors.decouple_sfr_time = 100*cosmo.age(zval).value/cosmo.age(0.1).value
 
@@ -71,7 +73,7 @@ def make_colours(specdetails, sp, cosmo):
 
     sp.params['zred']=0
 
-    sfh_tuple, dust, met, zval = specdetails # redshift of model 
+    sfh_tuple, dust, dust_index, met, zval = specdetails # redshift of model 
 
     if np.isnan(zval):
         rest_nuv, rest_r, rest_u, rest_v, rest_j = -99, -99, -99, -99, -99
@@ -91,8 +93,8 @@ def make_colours(specdetails, sp, cosmo):
 def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], return_spec = False, peraa = False, input_sfh = False):
     """
     makespec() works in two ways to create spectra or SEDs from an input list of physical paramters.
-    with input_sfh = False, specdetails = [sfh_tuple, dust, met, zval]
-    with input_sfh = True, specdetails = [sfh, timeax, dust, met, zval]
+    with input_sfh = False, specdetails = [sfh_tuple, dust, dust_index, met, zval]
+    with input_sfh = True, specdetails = [sfh, timeax, dust, dust_index, met, zval]
 
     return_spec can be true, false, or an array of wavelengths. in case
 
@@ -113,14 +115,16 @@ def makespec(specdetails, priors, sp, cosmo, filter_list = [], filt_dir = [], re
 
     # variable parameters
     if input_sfh == True:
-        [sfh, timeax, dust, met, zval] = specdetails
+        [sfh, timeax, dust, dust_index, met, zval] = specdetails
     else:
-        [sfh_tuple, dust, met, zval] = specdetails
+        [sfh_tuple, dust, dust_index, met, zval] = specdetails
         sfh, timeax = tuple_to_sfh(sfh_tuple, zval, decouple_sfr = priors.decouple_sfr, decouple_sfr_time = priors.decouple_sfr_time)
     sp.set_tabular_sfh(timeax, sfh)
     # sp.params['dust_type'] = 2
     # sp.params['dust1'] = dust1_rand
+    sp.params['dust_type'] = 4
     sp.params['dust2'] = dust
+    sp.params['dust_index'] = dust_index   # newer, needs to come from specdetails
     sp.params['logzsol'] = met
     sp.params['gas_logz'] = met # matching stellar to gas-phase metallicity
     sp.params['zred'] = zval
@@ -382,6 +386,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
     sfh_tuple_rec_all = []
     norm_all = []
     dust_all = []
+    dust_index_all = []
     met_all = []
     sed_all = []
     mstar_all = []
@@ -418,7 +423,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         temp = calctimes(timeax, sfh, priors.Nparam)
         temptuple = calctimes_to_tuple(temp)
 
-        dust = priors.sample_Av_prior()
+        dust, dust_index = priors.sample_Av_prior()
         met = priors.sample_Z_prior()
 
         #-------------------------------------------
@@ -436,7 +441,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
 #         lam, spec = sp.get_spectrum(tage = cosmology.age(zval).value)
 #         spec_ujy = convert_to_microjansky(spec, zval, cosmology)
 
-        specdetails = [sfh_tuple, dust, met, zval]
+        specdetails = [sfh_tuple, dust, dust_index, met, zval]
 
         if len(lam_array_spline) > 0:
             sed = makespec(specdetails, priors, sp, cosmology, filter_list, filt_dir, return_spec = lam_array_spline, peraa = True)
@@ -498,6 +503,7 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
         sfh_tuple_rec_all.append(temptuple)
         norm_all.append(norm)
         dust_all.append(dust)
+        dust_index_all.append(dust_index)
         met_all.append(met)
         sed_all.append(sed)
         mstar_all.append(mstar)
@@ -515,7 +521,9 @@ def generate_atlas(N_pregrid = 10, priors=priors, initial_seed = 42, store = Tru
                    'sfh_tuple_rec':np.array(sfh_tuple_rec_all),
                    'norm':np.array(norm_all), 'norm_method':norm_method,
                    'mstar':np.array(mstar_all), 'sfr':np.array(sfr_all),
-                   'dust':np.array(dust_all), 'met':np.array(met_all),
+                   'dust':np.array(dust_all), 
+                   'dust_index':np.array(dust_index_all),
+                   'met':np.array(met_all),
                    'sed':np.array(sed_all),
                    'nuvu':np.array(nuvu_all), 'nuvr':np.array(nuvr_all), 
                    'uv':np.array(uv_all), 'vj':np.array(vj_all), 'rj':np.array(rj_all)

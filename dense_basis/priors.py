@@ -74,11 +74,13 @@ class Priors(object):
         self.Z_max = 0.25
         self.massmet_width = 0.3
 
-        self.dust_model = 'Calzetti'
+        self.dust_model = 'KriekConroy'
         self.dust_prior = 'exp'
         self.Av_min = 0.0
         self.Av_max = 1.0
         self.Av_exp_scale = 1.0/3.0
+        self.dust_index_min = -0.5
+        self.dust_index_max = 0.5
 
         self.sfh_treatment = 'custom' # options are custom and TNGlike
         self.tx_alpha = 5.0
@@ -151,6 +153,16 @@ class Priors(object):
                 return np.nan
             # Return scalar if size=1 for NumPy 2.x compatibility
             return result.item() if size == 1 else result
+        elif self.dust_model == 'KriekConroy':
+            if self.dust_prior == 'flat':
+                result = np.random.uniform(size=size)*(self.Av_max-self.Av_min) + self.Av_min
+            elif self.dust_prior == 'exp':
+                result = np.random.exponential(size=size)*(self.Av_exp_scale)
+            else:
+                print('unknown dust_prior. options are flat and exp')
+                return np.nan
+            result2 = dust_index_prior = np.random.uniform(self.dust_index_min, self.dust_index_max, size=size)
+            return result.item() if size == 1 else result, result2.item() if size == 1 else result2
         if self.dust_model == 'CF00':
             # using parameters from Pacifici+16 for now
             slope_ism = np.random.uniform(size=size)*(0.6) - 1.0 # ism slope in range [-1.0,-0.4]
@@ -166,6 +178,7 @@ class Priors(object):
         else:
             print('not currently coded up, please email me regarding this functionality.')
             return np.zeros(size=size)*np.nan
+        
 
     def print_priors(self):
         print('--------------Priors:--------------')

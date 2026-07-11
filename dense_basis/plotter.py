@@ -95,7 +95,7 @@ def plot_atlas_priors(atlas):
     quants = np.vstack((mass_unnormed, sfr_unnormed, ssfr, txs.T, met, dust, zval)).T
 
     txs = ['t'+'%.0f' %i for i in quantile_names(txs.shape[1])]
-    pg_labels = ['log M*', 'log SFR', 'log sSFR', 'Z', 'Av', 'z']
+    pg_labels = ['log M*', 'log SFR', 'log sSFR', 'Z', 'Av', 'dust_index', 'z']
     pg_labels[3:3] = txs
 
     figure = corner.corner(quants,plot_datapoints=False, fill_contours=True,labels=pg_labels,
@@ -120,7 +120,7 @@ def plot_posteriors(chi2_array, norm_fac, sed, atlas, truths = [], **kwargs):
     #pg_params = np.vstack([pg_theta[0][0,0:], pg_theta[0][1,0:], pg_theta[0][3:,0:], pg_theta[1], pg_theta[2], pg_theta[3]])
     sfrvals = atlas['sfr'].copy()
     sfrvals[sfrvals<-3] = -3
-    pg_params = np.vstack([atlas['mstar'],sfrvals,atlas['sfh_tuple'][0:,3:].T,atlas['met'].ravel(),atlas['dust'].ravel(),atlas['zval'].ravel()])
+    pg_params = np.vstack([atlas['mstar'],sfrvals,atlas['sfh_tuple'][0:,3:].T,atlas['met'].ravel(),atlas['dust'].ravel(),atlas['dust_index'].ravel(),atlas['zval'].ravel()])
     txs = ['t'+'%.0f' %i for i in quantile_names(pg_params.shape[0]-5)]
     pg_labels = ['log M*', 'log SFR', 'Z', 'Av', 'z']
     pg_labels[2:2] = txs
@@ -153,17 +153,18 @@ def plot_priors(fname, N_pregrid, N_param, dir = 'pregrids/'):
     cat = load_atlas(fname, N_pregrid, N_param, path = dir)
     sfh_tuples = cat['sfh_tuple']
     Av = cat['dust'].ravel()
+    dust_index = cat['dust_index'].ravel()
     Z = cat['met'].ravel()
     z = cat['zval'].ravel()
     seds = cat['sed']
     norm_method = cat['norm_method']
     norm_facs = cat['norm'].ravel()
 
-    pg_theta = [sfh_tuples, Z, Av, z, seds]
-    pg_params = np.vstack([pg_theta[0][0,0:], pg_theta[0][1,0:], pg_theta[0][3:,0:], pg_theta[1], pg_theta[2], pg_theta[3]])
+    pg_theta = [sfh_tuples, Z, Av, dust_index, z, seds]
+    pg_params = np.vstack([pg_theta[0][0,0:], pg_theta[0][1,0:], pg_theta[0][3:,0:], pg_theta[1], pg_theta[2], pg_theta[3], pg_theta[4]])
 
     txs = ['t'+'%.0f' %i for i in quantile_names(pg_params.shape[0]-5)]
-    pg_labels = ['log M*', 'log SFR', 'Z', 'Av', 'z']
+    pg_labels = ['log M*', 'log SFR', 'Z', 'Av', 'dust_index', 'z']
     pg_labels[2:2] = txs
 
     pg_priors = pg_params.copy()
